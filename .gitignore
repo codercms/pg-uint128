@@ -7,3 +7,9 @@ uint128.so
 uint128.dll
 uint_utils.o
 uint_utils.bc
+
+uint64.o
+uint64.bc
+
+magic.o
+magic.bc
