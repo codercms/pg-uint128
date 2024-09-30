@@ -1,5 +1,10 @@
 #include "postgres.h"
+#include <access/hash.h>
 #include <stdint.h>
+
+#define INT128_MAX (__int128) (((unsigned __int128) 1 << ((__SIZEOF_INT128__ * __CHAR_BIT__) - 1)) - 1)
+#define INT128_MIN (-INT128_MAX - 1)
+#define UINT128_MAX ((2 * (unsigned __int128) INT128_MAX) + 1)
 
 #define Uint128PGetDatum(X)		    PointerGetDatum(X)
 #define PG_RETURN_Uint128_P(X)		return Uint128PGetDatum(X)
@@ -85,4 +90,14 @@ static inline uint128 le128toh(uint128 x) {
   #endif
 
   return x;
+}
+
+static inline Datum hashuint8(uint64 val)
+{
+	uint32		lohalf = (uint32) val;
+	uint32		hihalf = (uint32) (val >> 32);
+
+	lohalf ^= hihalf;
+
+	return hash_uint32(lohalf);
 }
