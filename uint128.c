@@ -11,10 +11,6 @@
 #include "uint_utils.h"
 #include "uint128.h"
 
-#ifdef PG_MODULE_MAGIC
-PG_MODULE_MAGIC;
-#endif
-
 PG_FUNCTION_INFO_V1(uint16_in);
 PG_FUNCTION_INFO_V1(uint16_out);
 PG_FUNCTION_INFO_V1(uint16_send);
@@ -46,10 +42,12 @@ PG_FUNCTION_INFO_V1(uint16_shr);
 PG_FUNCTION_INFO_V1(uint16_from_int2);
 PG_FUNCTION_INFO_V1(uint16_from_int4);
 PG_FUNCTION_INFO_V1(uint16_from_int8);
+PG_FUNCTION_INFO_V1(uint16_from_uint8);
 
 PG_FUNCTION_INFO_V1(uint16_to_int2);
 PG_FUNCTION_INFO_V1(uint16_to_int4);
 PG_FUNCTION_INFO_V1(uint16_to_int8);
+PG_FUNCTION_INFO_V1(uint16_to_uint8);
 
 PG_FUNCTION_INFO_V1(uint16_from_uuid);
 PG_FUNCTION_INFO_V1(uint16_to_uuid);
@@ -481,6 +479,16 @@ Datum uint16_from_int8(PG_FUNCTION_ARGS) {
     PG_RETURN_Uint128_P(result);
 }
 
+Datum uint16_from_uint8(PG_FUNCTION_ARGS) {
+    uint64 a = PG_GETARG_UINT64(0);
+    uint128 *result;
+
+    result = (uint128 *) palloc(sizeof(uint128));
+    *result = (uint128)a;  // Convert int8 to uint128
+
+    PG_RETURN_Uint128_P(result);
+}
+
 Datum uint16_to_int2(PG_FUNCTION_ARGS) {
     uint128 *a = PG_GETARG_Uint128_P(0);
     int16 result;
@@ -524,6 +532,21 @@ Datum uint16_to_int8(PG_FUNCTION_ARGS) {
 
     result = (int64)*a;  // Safe to cast
     PG_RETURN_INT64(result);
+}
+
+Datum uint16_to_uint8(PG_FUNCTION_ARGS) {
+    uint128 *a = PG_GETARG_Uint128_P(0);
+    uint64 result;
+
+    // Check for overflow
+    if (*a > UINT64_MAX) {
+        ereport(ERROR,
+                (errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
+                 errmsg("uint128 value exceeds int8 range")));
+    }
+
+    result = (uint64)*a;  // Safe to cast
+    PG_RETURN_UINT64(result);
 }
 
 // Special cast to UUID and back

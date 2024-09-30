@@ -12,7 +12,8 @@ Datum funcname(PG_FUNCTION_ARGS) \
 #define DEFINE_UINT128_CMP_FUNCTIONS(op, funcname_prefix) \
     DEFINE_UINT128_CMP_FUNCTION(op, CppConcat(funcname_prefix, _int2), int16, INT16); \
     DEFINE_UINT128_CMP_FUNCTION(op, CppConcat(funcname_prefix, _int4), int32, INT32); \
-    DEFINE_UINT128_CMP_FUNCTION(op, CppConcat(funcname_prefix, _int8), int64, INT64);
+    DEFINE_UINT128_CMP_FUNCTION(op, CppConcat(funcname_prefix, _int8), int64, INT64); \
+    DEFINE_UINT128_CMP_FUNCTION(op, CppConcat(funcname_prefix, _uint8), uint64, UINT64);
 
 #define DEFINE_UINT128_ARITHMETIC_FUNCTION(op, funcname, inttype, casttype) \
 PG_FUNCTION_INFO_V1(funcname); \
@@ -25,7 +26,8 @@ Datum funcname(PG_FUNCTION_ARGS) \
 #define DEFINE_UINT128_ARITHMETIC_FUNCTIONS(op, funcname_prefix) \
     DEFINE_UINT128_ARITHMETIC_FUNCTION(op, CppConcat(funcname_prefix, _int2), int16, INT16); \
     DEFINE_UINT128_ARITHMETIC_FUNCTION(op, CppConcat(funcname_prefix, _int4), int32, INT32); \
-    DEFINE_UINT128_ARITHMETIC_FUNCTION(op, CppConcat(funcname_prefix, _int8), int64, INT64);
+    DEFINE_UINT128_ARITHMETIC_FUNCTION(op, CppConcat(funcname_prefix, _int8), int64, INT64); \
+    DEFINE_UINT128_ARITHMETIC_FUNCTION(op, CppConcat(funcname_prefix, _uint8), uint64, UINT64);
 
 
 #define DEFINE_UINT128_BITWISE_FUNCTION(op, funcname, inttype, casttype) \
@@ -39,7 +41,8 @@ Datum funcname(PG_FUNCTION_ARGS) \
 #define DEFINE_UINT128_BITWISE_FUNCTIONS(op, funcname_prefix) \
     DEFINE_UINT128_BITWISE_FUNCTION(op, CppConcat(funcname_prefix, _int2), int16, INT16); \
     DEFINE_UINT128_BITWISE_FUNCTION(op, CppConcat(funcname_prefix, _int4), int32, INT32); \
-    DEFINE_UINT128_BITWISE_FUNCTION(op, CppConcat(funcname_prefix, _int8), int64, INT64);
+    DEFINE_UINT128_BITWISE_FUNCTION(op, CppConcat(funcname_prefix, _int8), int64, INT64); \
+    DEFINE_UINT128_BITWISE_FUNCTION(op, CppConcat(funcname_prefix, _uint8), uint64, UINT64);
 
 
 

@@ -5,9 +5,14 @@ declare(strict_types=1);
 $extName = 'uint128';
 
 const INT_TYPES = [
-   'int2',
-   'int4',
-   'int8',
+    'int2',
+    'int4',
+    'int8',
+];
+
+const CROSS_TYPES = [
+    'uint8' => ['uint16'],
+    'uint16' => ['uint8'],
 ];
 
 class OpConfig
@@ -220,12 +225,13 @@ class TypeOpConfig
     ) {
     }
 
-    public function getSQLFunc(string $extName, TypeConfig $parent): string
+    public function getSQLFunc(string $extName, TypeConfig $parent, bool $crossTypesOnly): string
     {
-        $cmpFunc = function () use ($extName, $parent): string {
+        $cmpFunc = function () use ($extName, $parent, $crossTypesOnly): string {
             $op = $this->op;
 
-            $sql = <<<EOT
+            if (!$crossTypesOnly) {
+                $sql = <<<EOT
 CREATE FUNCTION {$parent->name}_{$op->value}({$parent->name}, {$parent->name}) RETURNS boolean
     IMMUTABLE
     STRICT
@@ -234,6 +240,9 @@ CREATE FUNCTION {$parent->name}_{$op->value}({$parent->name}, {$parent->name}) R
 
 
 EOT;
+            } else {
+                $sql = '';
+            }
 
             foreach ($this->types as $EXT_TYPE) {
                 $sql .= <<<EOT
@@ -250,10 +259,11 @@ EOT;
             return $sql;
         };
 
-        $arithmFunc = function () use ($extName, $parent): string {
+        $arithmFunc = function () use ($extName, $parent, $crossTypesOnly): string {
             $op = $this->op;
 
-            $sql = <<<EOT
+            if (!$crossTypesOnly) {
+                $sql = <<<EOT
 CREATE FUNCTION {$parent->name}_{$op->value}({$parent->name}, {$parent->name}) RETURNS {$parent->name}
     IMMUTABLE
     STRICT
@@ -262,6 +272,9 @@ CREATE FUNCTION {$parent->name}_{$op->value}({$parent->name}, {$parent->name}) R
 
 
 EOT;
+            } else {
+                $sql = '';
+            }
 
             foreach ($this->types as $EXT_TYPE) {
                 $sql .= <<<EOT
@@ -278,10 +291,11 @@ EOT;
             return $sql;
         };
 
-        $bitwiseFunc = function () use ($extName, $parent): string {
+        $bitwiseFunc = function () use ($extName, $parent, $crossTypesOnly): string {
             $op = $this->op;
 
-            $sql = <<<EOT
+            if (!$crossTypesOnly) {
+                $sql = <<<EOT
 CREATE FUNCTION {$parent->name}_{$op->value}({$parent->name}, {$parent->name}) RETURNS {$parent->name}
     IMMUTABLE
     STRICT
@@ -290,6 +304,9 @@ CREATE FUNCTION {$parent->name}_{$op->value}({$parent->name}, {$parent->name}) R
 
 
 EOT;
+            } else {
+                $sql = '';
+            }
 
             foreach ($this->types as $EXT_TYPE) {
                 $sql .= <<<EOT
@@ -330,13 +347,17 @@ EOT;
         return $sql;
     }
 
-    public function getSQLOperator(string $extName, TypeConfig $parent): string
+    public function getSQLOperator(string $extName, TypeConfig $parent, bool $crossTypesOnly): string
     {
-        $cmpFunc = function () use ($extName, $parent): string {
+        $cmpFunc = function () use ($extName, $parent, $crossTypesOnly): string {
             $op = $this->op;
             $cfg = $op->config();
 
-            $sql = $cfg->toSQL("{$parent->name}_{$op->value}", $parent->name, $parent->name) . "\n";
+            if (!$crossTypesOnly) {
+                $sql = $cfg->toSQL("{$parent->name}_{$op->value}", $parent->name, $parent->name) . "\n";
+            } else {
+                $sql = '';
+            }
 
             foreach ($this->types as $EXT_TYPE) {
                 $sql .= $cfg->toSQL("{$parent->name}_{$op->value}_{$EXT_TYPE}", $parent->name, $EXT_TYPE) . "\n";
@@ -345,11 +366,15 @@ EOT;
             return $sql;
         };
 
-        $arithmFunc = function () use ($extName, $parent): string {
+        $arithmFunc = function () use ($extName, $parent, $crossTypesOnly): string {
             $op = $this->op;
             $cfg = $op->config();
 
-            $sql = $cfg->toSQL("{$parent->name}_{$op->value}", $parent->name, $parent->name) . "\n";
+            if (!$crossTypesOnly) {
+                $sql = $cfg->toSQL("{$parent->name}_{$op->value}", $parent->name, $parent->name) . "\n";
+            } else {
+                $sql = '';
+            }
 
             foreach ($this->types as $EXT_TYPE) {
                 $sql .= $cfg->toSQL("{$parent->name}_{$op->value}_{$EXT_TYPE}", $parent->name, $EXT_TYPE) . "\n";
@@ -358,11 +383,15 @@ EOT;
             return $sql;
         };
 
-        $bitwiseFunc = function () use ($extName, $parent): string {
+        $bitwiseFunc = function () use ($extName, $parent, $crossTypesOnly): string {
             $op = $this->op;
             $cfg = $op->config();
 
-            $sql = $cfg->toSQL("{$parent->name}_{$op->value}", $parent->name, $parent->name) . "\n";
+            if (!$crossTypesOnly) {
+                $sql = $cfg->toSQL("{$parent->name}_{$op->value}", $parent->name, $parent->name) . "\n";
+            } else {
+                $sql = '';
+            }
 
             foreach ($this->types as $EXT_TYPE) {
                 $sql .= $cfg->toSQL("{$parent->name}_{$op->value}_{$EXT_TYPE}", $parent->name, $EXT_TYPE) . "\n";
@@ -403,16 +432,20 @@ class TypeConfig
         public readonly bool $passByValue = true,
         public readonly array $ops = [],
         public readonly array $casts = [],
+        public readonly bool $crossTypesOnly = false,
     ) {
     }
 
     public function toSQL(string $extName): string
     {
-        $sql = "CREATE TYPE {$this->name};\n\n";
+        $sql = '';
 
-        $passByValue = $this->passByValue ? 'PASSEDBYVALUE,' : '--PASSEDBYVALUE,';
+        if (!$this->crossTypesOnly) {
+            $sql = "CREATE TYPE {$this->name};\n\n";
 
-        $sql .= <<<EOL
+            $passByValue = $this->passByValue ? 'PASSEDBYVALUE,' : '--PASSEDBYVALUE,';
+
+            $sql .= <<<EOL
 CREATE FUNCTION {$this->name}_in(cstring) RETURNS {$this->name}
     IMMUTABLE
     STRICT
@@ -425,7 +458,7 @@ CREATE FUNCTION {$this->name}_out({$this->name}) RETURNS cstring
     LANGUAGE C
     AS '\$libdir/{$extName}', '{$this->name}_out';
 
-CREATE FUNCTION {$this->name}_recv(internal) RETURNS uint16
+CREATE FUNCTION {$this->name}_recv(internal) RETURNS {$this->name}
     IMMUTABLE
     STRICT
     LANGUAGE C
@@ -450,14 +483,15 @@ CREATE TYPE {$this->name} (
 
 EOL;
 
-        $sql .= "\n-- Inout casts block\n\n";
+            $sql .= "\n-- Inout casts block\n\n";
 
-        // IN-OUT casts
-        foreach (['double precision', 'numeric', 'real'] as $inoutType) {
-            $sql .= "CREATE CAST ({$inoutType} AS {$this->name}) WITH INOUT AS ASSIGNMENT;\n";
-            $sql .= "CREATE CAST ({$this->name} AS {$inoutType}) WITH INOUT AS IMPLICIT;\n";
+            // IN-OUT casts
+            foreach (['double precision', 'numeric', 'real'] as $inoutType) {
+                $sql .= "CREATE CAST ({$inoutType} AS {$this->name}) WITH INOUT AS ASSIGNMENT;\n";
+                $sql .= "CREATE CAST ({$this->name} AS {$inoutType}) WITH INOUT AS IMPLICIT;\n";
 
-            $sql .= "\n";
+                $sql .= "\n";
+            }
         }
 
         $sql .= "\n-- Casts block";
@@ -488,15 +522,16 @@ EOL;
         $sql .= "\n-- Ops block\n\n";
 
         foreach ($this->ops as $op) {
-            $sql .= $op->getSQLFunc($extName, $this) . "\n";
+            $sql .= $op->getSQLFunc($extName, $this, $this->crossTypesOnly) . "\n";
         }
 
         foreach ($this->ops as $op) {
-            $sql .= $op->getSQLOperator($extName, $this) . "\n";
+            $sql .= $op->getSQLOperator($extName, $this, $this->crossTypesOnly) . "\n";
         }
 
-        $sql .= "\n-- Index ops block\n\n";
-        $sql .= <<<EOT
+        if (!$this->crossTypesOnly) {
+            $sql .= "\n-- Index ops block\n\n";
+            $sql .= <<<EOT
 CREATE FUNCTION {$this->name}_cmp({$this->name}, {$this->name}) RETURNS int
     IMMUTABLE
     STRICT
@@ -526,7 +561,7 @@ DEFAULT FOR TYPE {$this->name} USING hash FAMILY integer_ops AS
     FUNCTION        1       {$this->name}_hash({$this->name});
 
 EOT;
-
+        }
 
         $sql .= "\n";
 
@@ -534,6 +569,7 @@ EOT;
     }
 }
 
+/** @var array<TypeConfig> $types */
 $types = [
     new TypeConfig(
         name: 'uint16',
@@ -562,12 +598,92 @@ $types = [
             new TypeOpConfig(Op::Shr, types: INT_TYPES),
         ],
         casts: array_merge(INT_TYPES, ['uuid']),
-    )
+    ),
+    new TypeConfig(
+        name: 'uint8',
+        alignment: 'double',
+        size: 8,
+        passByValue: true,
+        ops: [
+            new TypeOpConfig(Op::Eq, types: INT_TYPES),
+            new TypeOpConfig(Op::Ne, types: INT_TYPES),
+            new TypeOpConfig(Op::Gt, types: INT_TYPES),
+            new TypeOpConfig(Op::Lt, types: INT_TYPES),
+            new TypeOpConfig(Op::Ge, types: INT_TYPES),
+            new TypeOpConfig(Op::Le, types: INT_TYPES),
+
+            new TypeOpConfig(Op::Add, types: INT_TYPES),
+            new TypeOpConfig(Op::Sub, types: INT_TYPES),
+            new TypeOpConfig(Op::Mul, types: INT_TYPES),
+            new TypeOpConfig(Op::Div, types: INT_TYPES),
+            new TypeOpConfig(Op::Mod, types: INT_TYPES),
+
+            new TypeOpConfig(Op::Xor, types: INT_TYPES),
+            new TypeOpConfig(Op::And, types: INT_TYPES),
+            new TypeOpConfig(Op::Or, types: INT_TYPES),
+            new TypeOpConfig(Op::Not, types: []),
+            new TypeOpConfig(Op::Shl, types: INT_TYPES),
+            new TypeOpConfig(Op::Shr, types: INT_TYPES),
+        ],
+        casts: INT_TYPES,
+    ),
 ];
 
+$buf = '';
+
 foreach ($types as $type) {
-    file_put_contents("uint128--1.0.0.sql", $type->toSQL($extName));
+    $buf .= $type->toSQL($extName) . "\n";
     // echo $type->toSQL($extName) . PHP_EOL;
 }
+
+$buf .= "\n\n-- Cross types ops\n";
+
+/** @var array<string, string[]> $processedCastPairs */
+$processedCastPairs = [];
+
+// Cross types conversions
+foreach ($types as $type) {
+    $crossTypes = CROSS_TYPES[$type->name] ?? [];
+    if ($crossTypes === []) {
+        continue;
+    }
+
+    $typConfig = new TypeConfig(
+        name: $type->name,
+        alignment: $type->alignment,
+        size: $type->size,
+        passByValue: $type->passByValue,
+        ops: array_values(array_filter(array_map(function (TypeOpConfig $typeCfg) use ($crossTypes) {
+            if ($typeCfg->op === Op::Not) {
+                return null;
+            }
+
+            return new TypeOpConfig(
+                op: $typeCfg->op,
+                types: $crossTypes,
+            );
+        }, $type->ops))),
+        // Prevent generation duplicate casts
+        casts: array_values(
+            array_filter($crossTypes, static function (string $crossType) use ($type, $processedCastPairs) {
+                if (!array_key_exists($crossType, $processedCastPairs)) {
+                    return true;
+                }
+
+                return !in_array($type->name, $processedCastPairs[$crossType], true);
+            })
+        ),
+        crossTypesOnly: true,
+    );
+
+    foreach ($crossTypes as $crossType) {
+        $processedCastPairs[$type->name][] = $crossType;
+        $processedCastPairs[$crossType][] = $type->name;
+    }
+
+    $buf .= $typConfig->toSQL($extName) . "\n\n";
+}
+
+file_put_contents("uint128--1.0.0.sql", $buf);
 
 return;

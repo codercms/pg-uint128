@@ -52,6 +52,22 @@ int parse_uint128(const char* str, uint128* result) {
     return 0;
 }
 
+// Function to parse uint64 from string
+int parse_uint64(const char* str, uint64* result) {
+    size_t len = strlen(str);
+
+    for (size_t i = 0; i < len; i++) {
+        if (str[i] < '0' || str[i] > '9') {
+            return -1;
+        }
+
+        // Shift left by 10 and add the new digit
+        *result = *result * 10 + (str[i] - '0');
+    }
+
+    return 0;
+}
+
 
 // Function to convert uint128 to a decimal string
 // The caller must provide a buffer of sufficient size
@@ -98,6 +114,48 @@ char* uint128_to_string_v2(uint128 value, char* buffer, size_t buffer_size) {
     char* ptr;
 
     if (buffer_size < 40) {
+        return NULL; // Not enough space
+    }
+
+    ptr = buffer + buffer_size - 1; // Start from the end of the buffer
+    *ptr = '\0'; // Null-terminate the string
+
+    // Handle zero case explicitly
+    if (value == 0) {
+        *(--ptr) = '0';
+        return ptr;
+    }
+
+    // Use a loop to process two digits at a time
+    while (value >= 100) {
+        uint8_t remainder = value % 100; // Use uint8_t for remainder
+        value /= 100;
+
+        // Prepend the two digits to the string
+        ptr -= 2;
+        ptr[0] = smallsString[remainder * 2];
+        ptr[1] = smallsString[remainder * 2 + 1];
+    }
+
+    // Handle the last one or two digits
+    if (value < 10) {
+        *(--ptr) = (char)(value + '0'); // For single-digit numbers
+    } else {
+        ptr -= 2;
+        ptr[0] = smallsString[value * 2];
+        ptr[1] = smallsString[value * 2 + 1]; // For two-digit numbers
+    }
+
+    return ptr; // Return the pointer to the start of the string
+}
+
+
+// Function to convert uint128 to a decimal string using Golang approach
+// inspired by formatBits in strconv/itoa.go
+char* uint64_to_string_v2(uint64 value, char* buffer, size_t buffer_size) {
+    char* ptr;
+
+    if (buffer_size < 20) {
         return NULL; // Not enough space
     }
 

@@ -11,6 +11,10 @@
 #define DatumGetUint128P(X)		    ((uint128 *) DatumGetPointer(X))
 #define PG_GETARG_Uint128_P(X)		DatumGetUint128P(PG_GETARG_DATUM(X))
 
+#ifndef PG_GETARG_UINT64
+    #define PG_GETARG_UINT64(n)  DatumGetUInt64(PG_GETARG_DATUM(n))
+#endif
+
 uint32_t Uint32LE(uint8_t*);
 uint32_t Uint32BE(uint8_t*);
 uint64_t Uint64LE(uint8_t*);
@@ -20,9 +24,11 @@ uint128 Uint128BE(uint8_t*);
 void PutUint64BE(uint8_t* b, uint64_t v);
 
 int parse_uint128(const char* str, uint128* result);
+int parse_uint64(const char* str, uint64* result);
 
 char* uint128_to_string(uint128 value, char* buffer, size_t buffer_size);
 char* uint128_to_string_v2(uint128 value, char* buffer, size_t buffer_size);
+char* uint64_to_string_v2(uint64 value, char* buffer, size_t buffer_size);
 
 // Swaps bytes in 64 bit int
 // Linux byteswap.h impl
