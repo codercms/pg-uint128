@@ -95,6 +95,24 @@ CREATE FUNCTION uint16_eq(uint16, uint16) RETURNS boolean
     LANGUAGE C
     AS '$libdir/uint128', 'uint16_eq';
 
+CREATE FUNCTION uint16_eq_int2(uint16, int2) RETURNS boolean
+    IMMUTABLE
+    STRICT
+    LANGUAGE C
+    AS '$libdir/uint128', 'uint16_eq_int2';
+
+CREATE FUNCTION uint16_eq_int4(uint16, int4) RETURNS boolean
+    IMMUTABLE
+    STRICT
+    LANGUAGE C
+    AS '$libdir/uint128', 'uint16_eq_int8';
+
+CREATE FUNCTION uint16_eq_int8(uint16, int8) RETURNS boolean
+    IMMUTABLE
+    STRICT
+    LANGUAGE C
+    AS '$libdir/uint128', 'uint16_eq_int8';
+
 CREATE FUNCTION uint16_ne(uint16, uint16) RETURNS boolean
     IMMUTABLE
     STRICT
@@ -143,11 +161,47 @@ CREATE FUNCTION uint16_add(uint16, uint16) RETURNS uint16
     LANGUAGE C
     AS '$libdir/uint128', 'uint16_add';
 
+CREATE FUNCTION uint16_add_int2(uint16, int2) RETURNS uint16
+    IMMUTABLE
+    STRICT
+    LANGUAGE C
+    AS '$libdir/uint128', 'uint16_add_int2';
+
+CREATE FUNCTION uint16_add_int4(uint16, int4) RETURNS uint16
+    IMMUTABLE
+    STRICT
+    LANGUAGE C
+    AS '$libdir/uint128', 'uint16_add_int4';
+
+CREATE FUNCTION uint16_add_int8(uint16, int8) RETURNS uint16
+    IMMUTABLE
+    STRICT
+    LANGUAGE C
+    AS '$libdir/uint128', 'uint16_add_int8';
+
 CREATE FUNCTION uint16_sub(uint16, uint16) RETURNS uint16
     IMMUTABLE
     STRICT
     LANGUAGE C
     AS '$libdir/uint128', 'uint16_sub';
+
+CREATE FUNCTION uint16_sub_int2(uint16, int2) RETURNS uint16
+    IMMUTABLE
+    STRICT
+    LANGUAGE C
+    AS '$libdir/uint128', 'uint16_sub_int2';
+
+CREATE FUNCTION uint16_sub_int4(uint16, int4) RETURNS uint16
+    IMMUTABLE
+    STRICT
+    LANGUAGE C
+    AS '$libdir/uint128', 'uint16_sub_int4';
+
+CREATE FUNCTION uint16_sub_int8(uint16, int8) RETURNS uint16
+    IMMUTABLE
+    STRICT
+    LANGUAGE C
+    AS '$libdir/uint128', 'uint16_sub_int8';
 
 CREATE FUNCTION uint16_mul(uint16, uint16) RETURNS uint16
     IMMUTABLE
@@ -271,10 +325,49 @@ CREATE OPERATOR + (
     COMMUTATOR = '+'
 );
 
+CREATE OPERATOR + (
+    LEFTARG = uint16,
+    RIGHTARG = int2,
+    PROCEDURE = uint16_add_int2,
+    COMMUTATOR = '+'
+);
+
+CREATE OPERATOR + (
+    LEFTARG = uint16,
+    RIGHTARG = int4,
+    PROCEDURE = uint16_add_int4,
+    COMMUTATOR = '+'
+);
+
+CREATE OPERATOR + (
+    LEFTARG = uint16,
+    RIGHTARG = int8,
+    PROCEDURE = uint16_add_int8,
+    COMMUTATOR = '+'
+);
+
 CREATE OPERATOR - (
     LEFTARG = uint16,
     RIGHTARG = uint16,
     PROCEDURE = uint16_sub
+);
+
+CREATE OPERATOR - (
+    LEFTARG = uint16,
+    RIGHTARG = int2,
+    PROCEDURE = uint16_sub_int2
+);
+
+CREATE OPERATOR - (
+    LEFTARG = uint16,
+    RIGHTARG = int4,
+    PROCEDURE = uint16_sub_int4
+);
+
+CREATE OPERATOR - (
+    LEFTARG = uint16,
+    RIGHTARG = int8,
+    PROCEDURE = uint16_sub_int8
 );
 
 CREATE OPERATOR * (
@@ -335,7 +428,7 @@ CREATE OPERATOR >> (
 );
 
 CREATE OPERATOR CLASS uint16_ops
-DEFAULT FOR TYPE uint16 USING btree AS
+DEFAULT FOR TYPE uint16 USING btree FAMILY integer_ops AS
     OPERATOR 1 <,
     OPERATOR 2 <=,
     OPERATOR 3 =,
@@ -344,7 +437,7 @@ DEFAULT FOR TYPE uint16 USING btree AS
     FUNCTION 1 uint16_cmp(uint16, uint16)
 ;
 
-CREATE OPERATOR CLASS uint16_hash_ops
-DEFAULT FOR TYPE uint16 USING hash AS
+CREATE OPERATOR CLASS uint16_ops
+DEFAULT FOR TYPE uint16 USING hash FAMILY integer_ops AS
     OPERATOR        1       = ,
     FUNCTION        1       uint16_hash(uint16);

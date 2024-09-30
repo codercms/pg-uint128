@@ -27,6 +27,30 @@ Datum uint16_gt(PG_FUNCTION_ARGS);
 Datum uint16_le(PG_FUNCTION_ARGS);
 Datum uint16_ge(PG_FUNCTION_ARGS);
 
+Datum uint16_eq_int2(PG_FUNCTION_ARGS);
+Datum uint16_eq_int4(PG_FUNCTION_ARGS);
+Datum uint16_eq_int8(PG_FUNCTION_ARGS);
+
+Datum uint16_ne_int2(PG_FUNCTION_ARGS);
+Datum uint16_ne_int4(PG_FUNCTION_ARGS);
+Datum uint16_ne_int8(PG_FUNCTION_ARGS);
+
+Datum uint16_lt_int2(PG_FUNCTION_ARGS);
+Datum uint16_lt_int4(PG_FUNCTION_ARGS);
+Datum uint16_lt_int8(PG_FUNCTION_ARGS);
+
+Datum uint16_gt_int2(PG_FUNCTION_ARGS);
+Datum uint16_gt_int4(PG_FUNCTION_ARGS);
+Datum uint16_gt_int8(PG_FUNCTION_ARGS);
+
+Datum uint16_le_int2(PG_FUNCTION_ARGS);
+Datum uint16_le_int4(PG_FUNCTION_ARGS);
+Datum uint16_le_int8(PG_FUNCTION_ARGS);
+
+Datum uint16_ge_int2(PG_FUNCTION_ARGS);
+Datum uint16_ge_int4(PG_FUNCTION_ARGS);
+Datum uint16_ge_int8(PG_FUNCTION_ARGS);
+
 Datum uint16_cmp(PG_FUNCTION_ARGS);
 static int uint128_internal_cmp(const uint128 *arg1, const uint128 *arg2);
 
@@ -38,6 +62,26 @@ Datum uint16_sub(PG_FUNCTION_ARGS);
 Datum uint16_mul(PG_FUNCTION_ARGS);
 Datum uint16_div(PG_FUNCTION_ARGS);
 Datum uint16_mod(PG_FUNCTION_ARGS);
+
+Datum uint16_add_int2(PG_FUNCTION_ARGS);
+Datum uint16_add_int4(PG_FUNCTION_ARGS);
+Datum uint16_add_int8(PG_FUNCTION_ARGS);
+
+Datum uint16_sub_int2(PG_FUNCTION_ARGS);
+Datum uint16_sub_int4(PG_FUNCTION_ARGS);
+Datum uint16_sub_int8(PG_FUNCTION_ARGS);
+
+Datum uint16_mul_int2(PG_FUNCTION_ARGS);
+Datum uint16_mul_int4(PG_FUNCTION_ARGS);
+Datum uint16_mul_int8(PG_FUNCTION_ARGS);
+
+Datum uint16_div_int2(PG_FUNCTION_ARGS);
+Datum uint16_div_int4(PG_FUNCTION_ARGS);
+Datum uint16_div_int8(PG_FUNCTION_ARGS);
+
+Datum uint16_mod_int2(PG_FUNCTION_ARGS);
+Datum uint16_mod_int4(PG_FUNCTION_ARGS);
+Datum uint16_mod_int8(PG_FUNCTION_ARGS);
 
 Datum uint16_xor(PG_FUNCTION_ARGS);
 Datum uint16_and(PG_FUNCTION_ARGS);
@@ -69,6 +113,30 @@ PG_FUNCTION_INFO_V1(uint16_gt);
 PG_FUNCTION_INFO_V1(uint16_le);
 PG_FUNCTION_INFO_V1(uint16_ge);
 
+PG_FUNCTION_INFO_V1(uint16_eq_int2);
+PG_FUNCTION_INFO_V1(uint16_eq_int4);
+PG_FUNCTION_INFO_V1(uint16_eq_int8);
+
+PG_FUNCTION_INFO_V1(uint16_ne_int2);
+PG_FUNCTION_INFO_V1(uint16_ne_int4);
+PG_FUNCTION_INFO_V1(uint16_ne_int8);
+
+PG_FUNCTION_INFO_V1(uint16_lt_int2);
+PG_FUNCTION_INFO_V1(uint16_lt_int4);
+PG_FUNCTION_INFO_V1(uint16_lt_int8);
+
+PG_FUNCTION_INFO_V1(uint16_gt_int2);
+PG_FUNCTION_INFO_V1(uint16_gt_int4);
+PG_FUNCTION_INFO_V1(uint16_gt_int8);
+
+PG_FUNCTION_INFO_V1(uint16_le_int2);
+PG_FUNCTION_INFO_V1(uint16_le_int4);
+PG_FUNCTION_INFO_V1(uint16_le_int8);
+
+PG_FUNCTION_INFO_V1(uint16_ge_int2);
+PG_FUNCTION_INFO_V1(uint16_ge_int4);
+PG_FUNCTION_INFO_V1(uint16_ge_int8);
+
 PG_FUNCTION_INFO_V1(uint16_cmp);
 PG_FUNCTION_INFO_V1(uint16_hash);
 
@@ -77,6 +145,14 @@ PG_FUNCTION_INFO_V1(uint16_sub);
 PG_FUNCTION_INFO_V1(uint16_mul);
 PG_FUNCTION_INFO_V1(uint16_div);
 PG_FUNCTION_INFO_V1(uint16_mod);
+
+PG_FUNCTION_INFO_V1(uint16_add_int2);
+PG_FUNCTION_INFO_V1(uint16_add_int4);
+PG_FUNCTION_INFO_V1(uint16_add_int8);
+
+PG_FUNCTION_INFO_V1(uint16_sub_int2);
+PG_FUNCTION_INFO_V1(uint16_sub_int4);
+PG_FUNCTION_INFO_V1(uint16_sub_int8);
 
 PG_FUNCTION_INFO_V1(uint16_xor);
 PG_FUNCTION_INFO_V1(uint16_and);
@@ -213,12 +289,66 @@ Datum uint16_eq(PG_FUNCTION_ARGS)
 	PG_RETURN_BOOL(*val1 == *val2);
 }
 
+static inline Datum uint16_eq_int(PG_FUNCTION_ARGS, int64 val2)
+{
+	uint128		*val1 = PG_GETARG_Uint128_P(0);
+
+    if (val2 < 0) {
+        PG_RETURN_BOOL(false);
+    }
+    
+	PG_RETURN_BOOL(*val1 == val2);
+}
+
+Datum uint16_eq_int2(PG_FUNCTION_ARGS) {
+    int16 b = PG_GETARG_INT16(1);
+
+    return uint16_eq_int(fcinfo, (int64)b);
+}
+Datum uint16_eq_int4(PG_FUNCTION_ARGS) {
+    int32 b = PG_GETARG_INT32(1);
+
+    return uint16_eq_int(fcinfo, (int64)b);
+}
+Datum uint16_eq_int8(PG_FUNCTION_ARGS) {
+    int64 b = PG_GETARG_INT64(1);
+
+    return uint16_eq_int(fcinfo, (int64)b);
+}
+
 Datum uint16_ne(PG_FUNCTION_ARGS)
 {
 	uint128		*val1 = PG_GETARG_Uint128_P(0);
 	uint128		*val2 = PG_GETARG_Uint128_P(1);
 
 	PG_RETURN_BOOL(*val1 != *val2);
+}
+
+static inline Datum uint16_ne_int(PG_FUNCTION_ARGS, int64 val2)
+{
+	uint128		*val1 = PG_GETARG_Uint128_P(0);
+
+    if (val2 < 0) {
+        PG_RETURN_BOOL(true);
+    }
+    
+	PG_RETURN_BOOL(*val1 != val2);
+}
+
+Datum uint16_ne_int2(PG_FUNCTION_ARGS) {
+    int16 b = PG_GETARG_INT16(1);
+
+    return uint16_ne_int(fcinfo, (int64)b);
+}
+Datum uint16_ne_int4(PG_FUNCTION_ARGS) {
+    int32 b = PG_GETARG_INT32(1);
+
+    return uint16_ne_int(fcinfo, (int64)b);
+}
+Datum uint16_ne_int8(PG_FUNCTION_ARGS) {
+    int64 b = PG_GETARG_INT64(1);
+
+    return uint16_ne_int(fcinfo, (int64)b);
 }
 
 Datum uint16_lt(PG_FUNCTION_ARGS)
@@ -229,12 +359,66 @@ Datum uint16_lt(PG_FUNCTION_ARGS)
 	PG_RETURN_BOOL(*val1 < *val2);
 }
 
+static inline Datum uint16_lt_int(PG_FUNCTION_ARGS, int64 val2)
+{
+	uint128		*val1 = PG_GETARG_Uint128_P(0);
+
+    if (val2 < 0) {
+        PG_RETURN_BOOL(false);
+    }
+    
+	PG_RETURN_BOOL(*val1 < val2);
+}
+
+Datum uint16_lt_int2(PG_FUNCTION_ARGS) {
+    int16 b = PG_GETARG_INT16(1);
+
+    return uint16_lt_int(fcinfo, (int64)b);
+}
+Datum uint16_lt_int4(PG_FUNCTION_ARGS) {
+    int32 b = PG_GETARG_INT32(1);
+
+    return uint16_lt_int(fcinfo, (int64)b);
+}
+Datum uint16_lt_int8(PG_FUNCTION_ARGS) {
+    int64 b = PG_GETARG_INT64(1);
+
+    return uint16_lt_int(fcinfo, (int64)b);
+}
+
 Datum uint16_gt(PG_FUNCTION_ARGS)
 {
 	uint128		*val1 = PG_GETARG_Uint128_P(0);
 	uint128		*val2 = PG_GETARG_Uint128_P(1);
 
 	PG_RETURN_BOOL(*val1 > *val2);
+}
+
+static inline Datum uint16_gt_int(PG_FUNCTION_ARGS, int64 val2)
+{
+	uint128		*val1 = PG_GETARG_Uint128_P(0);
+
+    if (val2 < 0) {
+        PG_RETURN_BOOL(true);
+    }
+    
+	PG_RETURN_BOOL(*val1 > val2);
+}
+
+Datum uint16_gt_int2(PG_FUNCTION_ARGS) {
+    int16 b = PG_GETARG_INT16(1);
+
+    return uint16_gt_int(fcinfo, (int64)b);
+}
+Datum uint16_gt_int4(PG_FUNCTION_ARGS) {
+    int32 b = PG_GETARG_INT32(1);
+
+    return uint16_gt_int(fcinfo, (int64)b);
+}
+Datum uint16_gt_int8(PG_FUNCTION_ARGS) {
+    int64 b = PG_GETARG_INT64(1);
+
+    return uint16_gt_int(fcinfo, (int64)b);
 }
 
 Datum uint16_le(PG_FUNCTION_ARGS)
@@ -245,12 +429,66 @@ Datum uint16_le(PG_FUNCTION_ARGS)
 	PG_RETURN_BOOL(*val1 <= *val2);
 }
 
+static inline Datum uint16_le_int(PG_FUNCTION_ARGS, int64 val2)
+{
+	uint128		*val1 = PG_GETARG_Uint128_P(0);
+
+    if (val2 < 0) {
+        PG_RETURN_BOOL(false);
+    }
+    
+	PG_RETURN_BOOL(*val1 <= val2);
+}
+
+Datum uint16_le_int2(PG_FUNCTION_ARGS) {
+    int16 b = PG_GETARG_INT16(1);
+
+    return uint16_le_int(fcinfo, (int64)b);
+}
+Datum uint16_le_int4(PG_FUNCTION_ARGS) {
+    int32 b = PG_GETARG_INT32(1);
+
+    return uint16_le_int(fcinfo, (int64)b);
+}
+Datum uint16_le_int8(PG_FUNCTION_ARGS) {
+    int64 b = PG_GETARG_INT64(1);
+
+    return uint16_le_int(fcinfo, (int64)b);
+}
+
 Datum uint16_ge(PG_FUNCTION_ARGS)
 {
 	uint128		*val1 = PG_GETARG_Uint128_P(0);
 	uint128		*val2 = PG_GETARG_Uint128_P(1);
 
 	PG_RETURN_BOOL(*val1 >= *val2);
+}
+
+static inline Datum uint16_ge_int(PG_FUNCTION_ARGS, int64 val2)
+{
+	uint128		*val1 = PG_GETARG_Uint128_P(0);
+
+    if (val2 < 0) {
+        PG_RETURN_BOOL(true);
+    }
+    
+	PG_RETURN_BOOL(*val1 >= val2);
+}
+
+Datum uint16_ge_int2(PG_FUNCTION_ARGS) {
+    int16 b = PG_GETARG_INT16(1);
+
+    return uint16_ge_int(fcinfo, (int64)b);
+}
+Datum uint16_ge_int4(PG_FUNCTION_ARGS) {
+    int32 b = PG_GETARG_INT32(1);
+
+    return uint16_ge_int(fcinfo, (int64)b);
+}
+Datum uint16_ge_int8(PG_FUNCTION_ARGS) {
+    int64 b = PG_GETARG_INT64(1);
+
+    return uint16_ge_int(fcinfo, (int64)b);
 }
 
 /* handler for btree index operator */
@@ -308,6 +546,10 @@ Datum uint16_add(PG_FUNCTION_ARGS)
 	uint128		*b = PG_GETARG_Uint128_P(1);
 	uint128		*result;
 
+    if (b == 0) {
+        PG_RETURN_Uint128_P(a);
+    }
+
     // Check for overflow
     if (*a > UINT128_MAX - *b) {
         ereport(ERROR,
@@ -324,11 +566,126 @@ Datum uint16_add(PG_FUNCTION_ARGS)
     PG_RETURN_Uint128_P(result);
 }
 
+static inline Datum uint16_add_int(PG_FUNCTION_ARGS, int64 b)
+{
+	uint128		*a = PG_GETARG_Uint128_P(0);
+	uint128		*result;
+
+    if (b == 0) {
+        PG_RETURN_Uint128_P(a);
+    }
+
+    // Negation case
+    if (b < 0) {
+        b = -b;
+    
+        if (*a < (uint128)b) {
+            ereport(ERROR,
+                (
+                    errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
+                    errmsg("uint16 out of range")
+                )
+            );
+        }
+
+        result = (uint128 *)palloc(sizeof(uint128));
+
+        *result = *a - b;
+
+        PG_RETURN_Uint128_P(result);
+    }
+
+    // Check for overflow
+    if (*a > UINT128_MAX - (uint128)b) {
+        ereport(ERROR,
+            (
+                errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
+                errmsg("uint16 out of range")
+            )
+        );
+    }
+
+    result = (uint128*)palloc(sizeof(uint128));
+    *result = *a + b;
+
+    PG_RETURN_Uint128_P(result);
+}
+
+Datum uint16_add_int2(PG_FUNCTION_ARGS)
+{
+	int16		b = PG_GETARG_INT16(1);
+
+    return uint16_add_int(fcinfo, (int64)b);
+}
+
+Datum uint16_add_int8(PG_FUNCTION_ARGS)
+{
+	int16		b = PG_GETARG_INT16(1);
+
+    return uint16_add_int(fcinfo, (int64)b);
+}
+
+Datum uint16_add_int4(PG_FUNCTION_ARGS)
+{
+	int16		b = PG_GETARG_INT16(1);
+
+    return uint16_add_int(fcinfo, (int64)b);
+}
+
+static inline Datum uint16_sub_int(PG_FUNCTION_ARGS, int64 b)
+{
+	uint128		*a = PG_GETARG_Uint128_P(0);
+	uint128		*result;
+
+    if (b == 0) {
+        PG_RETURN_Uint128_P(a);
+    }
+
+    // Addition case
+    if (b < 0) {
+        b = -b;
+
+         // Check for overflow
+        if (*a > UINT128_MAX - (uint128)b) {
+            ereport(ERROR,
+                (
+                    errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
+                    errmsg("uint16 out of range")
+                )
+            );
+        }
+
+        result = (uint128*)palloc(sizeof(uint128));
+        *result = *a + b;
+
+        PG_RETURN_Uint128_P(result);
+    }
+
+    // Check for overflow
+    if ((uint128)b > *a) {
+        ereport(ERROR,
+            (
+                errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
+                errmsg("uint16 out of range")
+            )
+        );
+    }
+
+    result = (uint128*)palloc(sizeof(uint128));
+    *result = *a - b;
+
+    PG_RETURN_Uint128_P(result);
+}
+
 Datum uint16_sub(PG_FUNCTION_ARGS)
 {
 	uint128		*a = PG_GETARG_Uint128_P(0);
 	uint128		*b = PG_GETARG_Uint128_P(1);
 	uint128		*result;
+
+    if (*b == 0) {
+        PG_RETURN_Uint128_P(a);
+    }
 
     // Check for overflow
     if (*b > *a) {
@@ -344,6 +701,27 @@ Datum uint16_sub(PG_FUNCTION_ARGS)
     *result = *a - *b;
 
     PG_RETURN_Uint128_P(result);
+}
+
+Datum uint16_sub_int2(PG_FUNCTION_ARGS)
+{
+	int16		b = PG_GETARG_INT16(1);
+
+    return uint16_sub_int(fcinfo, (int64)b);
+}
+
+Datum uint16_sub_int4(PG_FUNCTION_ARGS)
+{
+	int16		b = PG_GETARG_INT32(1);
+
+    return uint16_sub_int(fcinfo, (int64)b);
+}
+
+Datum uint16_sub_int8(PG_FUNCTION_ARGS)
+{
+	int16		b = PG_GETARG_INT64(1);
+
+    return uint16_sub_int(fcinfo, (int64)b);
 }
 
 Datum uint16_mul(PG_FUNCTION_ARGS)
