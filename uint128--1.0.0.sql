@@ -106,6 +106,60 @@ CREATE FUNCTION uint16_sub(uint16, uint16) RETURNS uint16
     LANGUAGE C
     AS '$libdir/uint128', 'uint16_sub';
 
+CREATE FUNCTION uint16_mul(uint16, uint16) RETURNS uint16
+    IMMUTABLE
+    STRICT
+    LANGUAGE C
+    AS '$libdir/uint128', 'uint16_mul';
+
+CREATE FUNCTION uint16_div(uint16, uint16) RETURNS uint16
+    IMMUTABLE
+    STRICT
+    LANGUAGE C
+    AS '$libdir/uint128', 'uint16_div';
+
+CREATE FUNCTION uint16_mod(uint16, uint16) RETURNS uint16
+    IMMUTABLE
+    STRICT
+    LANGUAGE C
+    AS '$libdir/uint128', 'uint16_mod';
+
+CREATE FUNCTION uint16_xor(uint16, uint16) RETURNS uint16
+    IMMUTABLE
+    STRICT
+    LANGUAGE C
+    AS '$libdir/uint128', 'uint16_xor';
+
+CREATE FUNCTION uint16_and(uint16, uint16) RETURNS uint16
+    IMMUTABLE
+    STRICT
+    LANGUAGE C
+    AS '$libdir/uint128', 'uint16_and';
+
+CREATE FUNCTION uint16_or(uint16, uint16) RETURNS uint16
+    IMMUTABLE
+    STRICT
+    LANGUAGE C
+    AS '$libdir/uint128', 'uint16_or';
+
+CREATE FUNCTION uint16_not(uint16) RETURNS uint16
+    IMMUTABLE
+    STRICT
+    LANGUAGE C
+    AS '$libdir/uint128', 'uint16_not';
+
+CREATE FUNCTION uint16_shl(uint16, int4) RETURNS uint16
+    IMMUTABLE
+    STRICT
+    LANGUAGE C
+    AS '$libdir/uint128', 'uint16_shl';
+
+CREATE FUNCTION uint16_shr(uint16, int4) RETURNS uint16
+    IMMUTABLE
+    STRICT
+    LANGUAGE C
+    AS '$libdir/uint128', 'uint16_shr';
+
 CREATE OPERATOR = (
   LEFTARG = uint16,
   RIGHTARG = uint16,
@@ -177,8 +231,64 @@ CREATE OPERATOR + (
 CREATE OPERATOR - (
     LEFTARG = uint16,
     RIGHTARG = uint16,
-    PROCEDURE = uint16_sub,
-    COMMUTATOR = '-'
+    PROCEDURE = uint16_sub
+);
+
+CREATE OPERATOR * (
+    LEFTARG = uint16,
+    RIGHTARG = uint16,
+    PROCEDURE = uint16_mul,
+    COMMUTATOR = '*'
+);
+
+CREATE OPERATOR / (
+    LEFTARG = uint16,
+    RIGHTARG = uint16,
+    PROCEDURE = uint16_div
+);
+
+CREATE OPERATOR % (
+    LEFTARG = uint16,
+    RIGHTARG = uint16,
+    PROCEDURE = uint16_mod
+);
+
+CREATE OPERATOR # (
+    LEFTARG = uint16,
+    RIGHTARG = uint16,
+    PROCEDURE = uint16_xor,
+    COMMUTATOR = '#'
+);
+
+CREATE OPERATOR & (
+    LEFTARG = uint16,
+    RIGHTARG = uint16,
+    PROCEDURE = uint16_and,
+    COMMUTATOR = '&'
+);
+
+CREATE OPERATOR | (
+    LEFTARG = uint16,
+    RIGHTARG = uint16,
+    PROCEDURE = uint16_or,
+    COMMUTATOR = '|'
+);
+
+CREATE OPERATOR ~ (
+    RIGHTARG = uint16,
+    PROCEDURE = uint16_not
+);
+
+CREATE OPERATOR << (
+    LEFTARG = uint16,
+    RIGHTARG = int4,
+    PROCEDURE = uint16_shl
+);
+
+CREATE OPERATOR >> (
+    LEFTARG = uint16,
+    RIGHTARG = int4,
+    PROCEDURE = uint16_shr
 );
 
 CREATE OPERATOR CLASS uint16_ops

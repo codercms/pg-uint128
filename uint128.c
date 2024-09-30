@@ -35,6 +35,16 @@ Datum hashuint8(uint64);
 
 Datum uint16_add(PG_FUNCTION_ARGS);
 Datum uint16_sub(PG_FUNCTION_ARGS);
+Datum uint16_mul(PG_FUNCTION_ARGS);
+Datum uint16_div(PG_FUNCTION_ARGS);
+Datum uint16_mod(PG_FUNCTION_ARGS);
+
+Datum uint16_xor(PG_FUNCTION_ARGS);
+Datum uint16_and(PG_FUNCTION_ARGS);
+Datum uint16_or(PG_FUNCTION_ARGS);
+Datum uint16_not(PG_FUNCTION_ARGS);
+Datum uint16_shl(PG_FUNCTION_ARGS);
+Datum uint16_shr(PG_FUNCTION_ARGS);
 
 PG_FUNCTION_INFO_V1(uint16_in);
 PG_FUNCTION_INFO_V1(uint16_out);
@@ -53,6 +63,16 @@ PG_FUNCTION_INFO_V1(uint16_hash);
 
 PG_FUNCTION_INFO_V1(uint16_add);
 PG_FUNCTION_INFO_V1(uint16_sub);
+PG_FUNCTION_INFO_V1(uint16_mul);
+PG_FUNCTION_INFO_V1(uint16_div);
+PG_FUNCTION_INFO_V1(uint16_mod);
+
+PG_FUNCTION_INFO_V1(uint16_xor);
+PG_FUNCTION_INFO_V1(uint16_and);
+PG_FUNCTION_INFO_V1(uint16_or);
+PG_FUNCTION_INFO_V1(uint16_not);
+PG_FUNCTION_INFO_V1(uint16_shl);
+PG_FUNCTION_INFO_V1(uint16_shr);
 
 Datum uint16_in(PG_FUNCTION_ARGS)
 {
@@ -292,6 +312,146 @@ Datum uint16_sub(PG_FUNCTION_ARGS)
 
     result = (uint128*)palloc(sizeof(uint128));
     *result = *a - *b;
+
+    PG_RETURN_Uint128_P(result);
+}
+
+Datum uint16_mul(PG_FUNCTION_ARGS)
+{
+	uint128		*a = PG_GETARG_Uint128_P(0);
+	uint128		*b = PG_GETARG_Uint128_P(1);
+	uint128		*result;
+
+    if (*a == 0 || *b == 0) {
+        result = (uint128*)palloc(sizeof(uint128));
+        *result = 0;
+
+        PG_RETURN_Uint128_P(result);
+    }
+
+    // Check for overflow
+    if (*a > UINT128_MAX / *b) {
+        ereport(ERROR,
+            (
+                errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
+                errmsg("uint16 out of range")
+            )
+        );
+    }
+
+    result = (uint128*)palloc(sizeof(uint128));
+    *result = *a * *b;
+
+    PG_RETURN_Uint128_P(result);
+}
+
+Datum uint16_div(PG_FUNCTION_ARGS)
+{
+	uint128		*a = PG_GETARG_Uint128_P(0);
+	uint128		*b = PG_GETARG_Uint128_P(1);
+	uint128		*result;
+
+    // Check for division by zero
+    if (*b == 0) {
+        ereport(ERROR,
+            (
+                errcode(ERRCODE_DIVISION_BY_ZERO),
+                errmsg("division by zero")
+            )
+        );
+    }
+
+    result = (uint128*)palloc(sizeof(uint128));
+    *result = *a / *b;
+
+    PG_RETURN_Uint128_P(result);
+}
+
+Datum uint16_mod(PG_FUNCTION_ARGS)
+{
+	uint128		*a = PG_GETARG_Uint128_P(0);
+	uint128		*b = PG_GETARG_Uint128_P(1);
+	uint128		*result;
+
+    // Check for division by zero
+    if (*b == 0) {
+        ereport(ERROR,
+            (
+                errcode(ERRCODE_DIVISION_BY_ZERO),
+                errmsg("division by zero")
+            )
+        );
+    }
+
+    result = (uint128*)palloc(sizeof(uint128));
+    *result = *a % *b;
+
+    PG_RETURN_Uint128_P(result);
+}
+
+// Bitwise ops
+
+Datum uint16_xor(PG_FUNCTION_ARGS) {
+    uint128 *a = PG_GETARG_Uint128_P(0);
+    uint128 *b = PG_GETARG_Uint128_P(1);
+    uint128 *result;
+
+    result = (uint128 *) palloc(sizeof(uint128));
+    *result = *a ^ *b;  // Bitwise XOR
+
+    PG_RETURN_Uint128_P(result);
+}
+
+Datum uint16_and(PG_FUNCTION_ARGS) {
+    uint128 *a = PG_GETARG_Uint128_P(0);
+    uint128 *b = PG_GETARG_Uint128_P(1);
+    uint128 *result;
+
+    result = (uint128 *) palloc(sizeof(uint128));
+    *result = *a & *b;  // Bitwise AND
+
+    PG_RETURN_Uint128_P(result);
+}
+
+Datum uint16_or(PG_FUNCTION_ARGS) {
+    uint128 *a = PG_GETARG_Uint128_P(0);
+    uint128 *b = PG_GETARG_Uint128_P(1);
+    uint128 *result;
+
+    result = (uint128 *) palloc(sizeof(uint128));
+    *result = *a | *b;  // Bitwise OR
+
+    PG_RETURN_Uint128_P(result);
+}
+
+Datum uint16_not(PG_FUNCTION_ARGS) {
+    uint128 *a = PG_GETARG_Uint128_P(0);
+    uint128 *result;
+
+    result = (uint128 *) palloc(sizeof(uint128));
+    *result = ~(*a);  // Bitwise NOT
+
+    PG_RETURN_Uint128_P(result);
+}
+
+Datum uint16_shl(PG_FUNCTION_ARGS) {
+    uint128 *a = PG_GETARG_Uint128_P(0);
+    int32 shift = PG_GETARG_INT32(1);  // Number of bits to shift
+    uint128 *result;
+
+    result = (uint128 *) palloc(sizeof(uint128));
+    *result = *a << shift;  // Bitwise shift left
+
+    PG_RETURN_Uint128_P(result);
+}
+
+Datum uint16_shr(PG_FUNCTION_ARGS) {
+    uint128 *a = PG_GETARG_Uint128_P(0);
+    int32 shift = PG_GETARG_INT32(1);  // Number of bits to shift
+    uint128 *result;
+
+    result = (uint128 *) palloc(sizeof(uint128));
+    *result = *a >> shift;  // Bitwise shift right
 
     PG_RETURN_Uint128_P(result);
 }
