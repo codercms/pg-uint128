@@ -16,38 +16,10 @@ PG_FUNCTION_INFO_V1(uint16_out);
 PG_FUNCTION_INFO_V1(uint16_send);
 PG_FUNCTION_INFO_V1(uint16_recv);
 
-PG_FUNCTION_INFO_V1(uint16_eq);
-PG_FUNCTION_INFO_V1(uint16_ne);
-PG_FUNCTION_INFO_V1(uint16_lt);
-PG_FUNCTION_INFO_V1(uint16_gt);
-PG_FUNCTION_INFO_V1(uint16_le);
-PG_FUNCTION_INFO_V1(uint16_ge);
-
 PG_FUNCTION_INFO_V1(uint16_cmp);
 PG_FUNCTION_INFO_V1(uint16_hash);
 
-PG_FUNCTION_INFO_V1(uint16_add);
-PG_FUNCTION_INFO_V1(uint16_sub);
-PG_FUNCTION_INFO_V1(uint16_mul);
-PG_FUNCTION_INFO_V1(uint16_div);
-PG_FUNCTION_INFO_V1(uint16_mod);
-
-PG_FUNCTION_INFO_V1(uint16_xor);
-PG_FUNCTION_INFO_V1(uint16_and);
-PG_FUNCTION_INFO_V1(uint16_or);
 PG_FUNCTION_INFO_V1(uint16_not);
-PG_FUNCTION_INFO_V1(uint16_shl);
-PG_FUNCTION_INFO_V1(uint16_shr);
-
-PG_FUNCTION_INFO_V1(uint16_from_int2);
-PG_FUNCTION_INFO_V1(uint16_from_int4);
-PG_FUNCTION_INFO_V1(uint16_from_int8);
-PG_FUNCTION_INFO_V1(uint16_from_uint8);
-
-PG_FUNCTION_INFO_V1(uint16_to_int2);
-PG_FUNCTION_INFO_V1(uint16_to_int4);
-PG_FUNCTION_INFO_V1(uint16_to_int8);
-PG_FUNCTION_INFO_V1(uint16_to_uint8);
 
 PG_FUNCTION_INFO_V1(uint16_from_uuid);
 PG_FUNCTION_INFO_V1(uint16_to_uuid);
@@ -161,60 +133,19 @@ Datum uint16_send(PG_FUNCTION_ARGS)
 
 // Comparision ops
 
-Datum uint16_eq(PG_FUNCTION_ARGS)
-{
-	uint128		*val1 = PG_GETARG_Uint128_P(0);
-    uint128		*val2 = PG_GETARG_Uint128_P(1);
+DEFINE_UINT16_SELF_COMPARISON_FUNC(eq, ==);
+DEFINE_UINT16_SELF_COMPARISON_FUNC(ne, !=);
+DEFINE_UINT16_SELF_COMPARISON_FUNC(lt, <);
+DEFINE_UINT16_SELF_COMPARISON_FUNC(gt, >);
+DEFINE_UINT16_SELF_COMPARISON_FUNC(le, <=);
+DEFINE_UINT16_SELF_COMPARISON_FUNC(ge, >=);
 
-	PG_RETURN_BOOL(*val1 == *val2);
-}
-
-Datum uint16_ne(PG_FUNCTION_ARGS)
-{
-	uint128		*val1 = PG_GETARG_Uint128_P(0);
-	uint128		*val2 = PG_GETARG_Uint128_P(1);
-
-	PG_RETURN_BOOL(*val1 != *val2);
-}
-
-Datum uint16_lt(PG_FUNCTION_ARGS)
-{
-	uint128		*val1 = PG_GETARG_Uint128_P(0);
-	uint128		*val2 = PG_GETARG_Uint128_P(1);
-
-	PG_RETURN_BOOL(*val1 < *val2);
-}
-
-Datum uint16_gt(PG_FUNCTION_ARGS)
-{
-	uint128		*val1 = PG_GETARG_Uint128_P(0);
-	uint128		*val2 = PG_GETARG_Uint128_P(1);
-
-	PG_RETURN_BOOL(*val1 > *val2);
-}
-
-Datum uint16_le(PG_FUNCTION_ARGS)
-{
-	uint128		*val1 = PG_GETARG_Uint128_P(0);
-	uint128		*val2 = PG_GETARG_Uint128_P(1);
-
-	PG_RETURN_BOOL(*val1 <= *val2);
-}
-
-Datum uint16_ge(PG_FUNCTION_ARGS)
-{
-	uint128		*val1 = PG_GETARG_Uint128_P(0);
-	uint128		*val2 = PG_GETARG_Uint128_P(1);
-
-	PG_RETURN_BOOL(*val1 >= *val2);
-}
-
-DEFINE_UINT128_CMP_FUNCTIONS(eq, uint16_eq);
-DEFINE_UINT128_CMP_FUNCTIONS(ne, uint16_ne);
-DEFINE_UINT128_CMP_FUNCTIONS(gt, uint16_gt);
-DEFINE_UINT128_CMP_FUNCTIONS(ge, uint16_ge);
-DEFINE_UINT128_CMP_FUNCTIONS(lt, uint16_lt);
-DEFINE_UINT128_CMP_FUNCTIONS(le, uint16_le);
+DEFINE_UINT16_CMP_INT_FUNCS(eq, ==);
+DEFINE_UINT16_CMP_INT_FUNCS(ne, !=);
+DEFINE_UINT16_CMP_INT_FUNCS(lt, <);
+DEFINE_UINT16_CMP_INT_FUNCS(gt, >);
+DEFINE_UINT16_CMP_INT_FUNCS(le, <=);
+DEFINE_UINT16_CMP_INT_FUNCS(ge, >=);
 
 /* handler for btree index operator */
 Datum uint16_cmp(PG_FUNCTION_ARGS)
@@ -243,171 +174,23 @@ Datum uint16_hash(PG_FUNCTION_ARGS)
 
 // Arithmetic ops
 
-Datum uint16_add(PG_FUNCTION_ARGS)
-{
-	uint128		*a = PG_GETARG_Uint128_P(0);
-	uint128		*b = PG_GETARG_Uint128_P(1);
-	uint128		*result;
+DEFINE_UINT16_SELF_OVERFLOW_ARITHMETIC_FUNC(add, add_u128_overflow);
+DEFINE_UINT16_SELF_OVERFLOW_ARITHMETIC_FUNC(sub, sub_u128_overflow);
+DEFINE_UINT16_SELF_OVERFLOW_ARITHMETIC_FUNC(mul, mul_u128_overflow);
+DEFINE_UINT16_SELF_DIV_ARITHMETIC_FUNC(div, /);
+DEFINE_UINT16_SELF_DIV_ARITHMETIC_FUNC(mod, %);
 
-    if (b == 0) {
-        PG_RETURN_Uint128_P(a);
-    }
-
-    // Check for overflow
-    if (*a > UINT128_MAX - *b) {
-        ereport(ERROR,
-            (
-                errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
-                errmsg("uint16 out of range")
-            )
-        );
-    }
-
-    result = (uint128*)palloc(sizeof(uint128));
-    *result = *a + *b;
-
-    PG_RETURN_Uint128_P(result);
-}
-
-Datum uint16_sub(PG_FUNCTION_ARGS)
-{
-	uint128		*a = PG_GETARG_Uint128_P(0);
-	uint128		*b = PG_GETARG_Uint128_P(1);
-	uint128		*result;
-
-    if (*b == 0) {
-        PG_RETURN_Uint128_P(a);
-    }
-
-    // Check for overflow
-    if (*b > *a) {
-        ereport(ERROR,
-            (
-                errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
-                errmsg("uint16 out of range")
-            )
-        );
-    }
-
-    result = (uint128*)palloc(sizeof(uint128));
-    *result = *a - *b;
-
-    PG_RETURN_Uint128_P(result);
-}
-
-Datum uint16_mul(PG_FUNCTION_ARGS)
-{
-	uint128		*a = PG_GETARG_Uint128_P(0);
-	uint128		*b = PG_GETARG_Uint128_P(1);
-	uint128		*result;
-
-    if (*a == 0 || *b == 0) {
-        result = (uint128*)palloc(sizeof(uint128));
-        *result = 0;
-
-        PG_RETURN_Uint128_P(result);
-    }
-
-    // Check for overflow
-    if (*a > UINT128_MAX / *b) {
-        ereport(ERROR,
-            (
-                errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
-                errmsg("uint16 out of range")
-            )
-        );
-    }
-
-    result = (uint128*)palloc(sizeof(uint128));
-    *result = *a * *b;
-
-    PG_RETURN_Uint128_P(result);
-}
-
-Datum uint16_div(PG_FUNCTION_ARGS)
-{
-	uint128		*a = PG_GETARG_Uint128_P(0);
-	uint128		*b = PG_GETARG_Uint128_P(1);
-	uint128		*result;
-
-    // Check for division by zero
-    if (*b == 0) {
-        ereport(ERROR,
-            (
-                errcode(ERRCODE_DIVISION_BY_ZERO),
-                errmsg("division by zero")
-            )
-        );
-    }
-
-    result = (uint128*)palloc(sizeof(uint128));
-    *result = *a / *b;
-
-    PG_RETURN_Uint128_P(result);
-}
-
-Datum uint16_mod(PG_FUNCTION_ARGS)
-{
-	uint128		*a = PG_GETARG_Uint128_P(0);
-	uint128		*b = PG_GETARG_Uint128_P(1);
-	uint128		*result;
-
-    // Check for division by zero
-    if (*b == 0) {
-        ereport(ERROR,
-            (
-                errcode(ERRCODE_DIVISION_BY_ZERO),
-                errmsg("division by zero")
-            )
-        );
-    }
-
-    result = (uint128*)palloc(sizeof(uint128));
-    *result = *a % *b;
-
-    PG_RETURN_Uint128_P(result);
-}
-
-DEFINE_UINT128_ARITHMETIC_FUNCTIONS(add, uint16_add);
-DEFINE_UINT128_ARITHMETIC_FUNCTIONS(sub, uint16_sub);
-DEFINE_UINT128_ARITHMETIC_FUNCTIONS(mul, uint16_mul);
-DEFINE_UINT128_ARITHMETIC_FUNCTIONS(div, uint16_div);
-DEFINE_UINT128_ARITHMETIC_FUNCTIONS(mod, uint16_mod);
+DEFINE_UINT16_INT_OVERFLOW_ARITHMETIC_FUNCS(add, add_u128_overflow);
+DEFINE_UINT16_INT_OVERFLOW_ARITHMETIC_FUNCS(sub, sub_u128_overflow);
+DEFINE_UINT16_INT_OVERFLOW_ARITHMETIC_FUNCS(mul, mul_u128_overflow);
+DEFINE_UINT16_INT_DIV_ARITHMETIC_FUNCS(div, /);
+DEFINE_UINT16_INT_DIV_ARITHMETIC_FUNCS(mod, %);
 
 // Bitwise ops
 
-Datum uint16_xor(PG_FUNCTION_ARGS) {
-    uint128 *a = PG_GETARG_Uint128_P(0);
-    uint128 *b = PG_GETARG_Uint128_P(1);
-    uint128 *result;
-
-    result = (uint128 *) palloc(sizeof(uint128));
-    *result = *a ^ *b;  // Bitwise XOR
-
-    PG_RETURN_Uint128_P(result);
-}
-
-Datum uint16_and(PG_FUNCTION_ARGS) {
-    uint128 *a = PG_GETARG_Uint128_P(0);
-    uint128 *b = PG_GETARG_Uint128_P(1);
-    uint128 *result;
-
-    result = (uint128 *) palloc(sizeof(uint128));
-    *result = *a & *b;  // Bitwise AND
-
-    PG_RETURN_Uint128_P(result);
-}
-
-Datum uint16_or(PG_FUNCTION_ARGS) {
-    uint128 *a = PG_GETARG_Uint128_P(0);
-    uint128 *b = PG_GETARG_Uint128_P(1);
-    uint128 *result;
-
-    result = (uint128 *) palloc(sizeof(uint128));
-    *result = *a | *b;  // Bitwise OR
-
-    PG_RETURN_Uint128_P(result);
-}
+DEFINE_UINT16_SELF_BITWISE_FUNC(xor, ^);
+DEFINE_UINT16_SELF_BITWISE_FUNC(and, &);
+DEFINE_UINT16_SELF_BITWISE_FUNC(or, |);
 
 Datum uint16_not(PG_FUNCTION_ARGS) {
     uint128 *a = PG_GETARG_Uint128_P(0);
@@ -419,135 +202,26 @@ Datum uint16_not(PG_FUNCTION_ARGS) {
     PG_RETURN_Uint128_P(result);
 }
 
-Datum uint16_shl(PG_FUNCTION_ARGS) {
-    uint128 *a = PG_GETARG_Uint128_P(0);
-    int32 shift = PG_GETARG_INT32(1);  // Number of bits to shift
-    uint128 *result;
+DEFINE_UINT16_SELF_BITWISE_SHIFT_FUNC(shl, <<);
+DEFINE_UINT16_SELF_BITWISE_SHIFT_FUNC(shr, >>);
 
-    result = (uint128 *) palloc(sizeof(uint128));
-    *result = *a << shift;  // Bitwise shift left
-
-    PG_RETURN_Uint128_P(result);
-}
-
-Datum uint16_shr(PG_FUNCTION_ARGS) {
-    uint128 *a = PG_GETARG_Uint128_P(0);
-    int32 shift = PG_GETARG_INT32(1);  // Number of bits to shift
-    uint128 *result;
-
-    result = (uint128 *) palloc(sizeof(uint128));
-    *result = *a >> shift;  // Bitwise shift right
-
-    PG_RETURN_Uint128_P(result);
-}
-
-DEFINE_UINT128_BITWISE_FUNCTIONS(xor, uint16_xor);
-DEFINE_UINT128_BITWISE_FUNCTIONS(and, uint16_and);
-DEFINE_UINT128_BITWISE_FUNCTIONS(or, uint16_or);
-DEFINE_UINT128_BITWISE_FUNCTIONS(shl, uint16_shl);
-DEFINE_UINT128_BITWISE_FUNCTIONS(shr, uint16_shr);
+DEFINE_UINT16_INT_BITWISE_FUNCS(xor, ^);
+DEFINE_UINT16_INT_BITWISE_FUNCS(and, &);
+DEFINE_UINT16_INT_BITWISE_FUNCS(or, |);
 
 // Cast ops
 
-Datum uint16_from_int2(PG_FUNCTION_ARGS) {
-    int16 a = PG_GETARG_INT16(0);
-    uint128 *result;
+DEFINE_UINT16_FROM_INT_FUNC(int2, int16, PG_GETARG_INT16);
+DEFINE_UINT16_FROM_INT_FUNC(int4, int32, PG_GETARG_INT32);
+DEFINE_UINT16_FROM_INT_FUNC(int8, int64, PG_GETARG_INT64);
+DEFINE_UINT16_FROM_INT_FUNC(uint8, uint64, PG_GETARG_UINT64);
 
-    result = (uint128 *) palloc(sizeof(uint128));
-    *result = (uint128)a;  // Convert int2 to uint128
 
-    PG_RETURN_Uint128_P(result);
-}
+DEFINE_UINT16_TO_INT_FUNC(int2, int16, INT16_MAX, PG_RETURN_INT16);
+DEFINE_UINT16_TO_INT_FUNC(int4, int32, INT32_MAX, PG_RETURN_INT32);
+DEFINE_UINT16_TO_INT_FUNC(int8, int64, INT64_MAX, PG_RETURN_INT64);
+DEFINE_UINT16_TO_INT_FUNC(uint8, uint64, UINT64_MAX, PG_RETURN_UINT64);
 
-Datum uint16_from_int4(PG_FUNCTION_ARGS) {
-    int32 a = PG_GETARG_INT32(0);
-    uint128 *result;
-
-    result = (uint128 *) palloc(sizeof(uint128));
-    *result = (uint128)a;  // Convert int4 to uint128
-
-    PG_RETURN_Uint128_P(result);
-}
-
-Datum uint16_from_int8(PG_FUNCTION_ARGS) {
-    int64 a = PG_GETARG_INT64(0);
-    uint128 *result;
-
-    result = (uint128 *) palloc(sizeof(uint128));
-    *result = (uint128)a;  // Convert int8 to uint128
-
-    PG_RETURN_Uint128_P(result);
-}
-
-Datum uint16_from_uint8(PG_FUNCTION_ARGS) {
-    uint64 a = PG_GETARG_UINT64(0);
-    uint128 *result;
-
-    result = (uint128 *) palloc(sizeof(uint128));
-    *result = (uint128)a;  // Convert int8 to uint128
-
-    PG_RETURN_Uint128_P(result);
-}
-
-Datum uint16_to_int2(PG_FUNCTION_ARGS) {
-    uint128 *a = PG_GETARG_Uint128_P(0);
-    int16 result;
-
-    // Check for overflow
-    if (*a > INT16_MAX) {
-        ereport(ERROR,
-                (errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
-                 errmsg("uint128 value exceeds int2 range")));
-    }
-
-    result = (int16)*a;  // Safe to cast
-    PG_RETURN_INT16(result);
-}
-
-Datum uint16_to_int4(PG_FUNCTION_ARGS) {
-    uint128 *a = PG_GETARG_Uint128_P(0);
-    int32 result;
-
-    // Check for overflow
-    if (*a > INT32_MAX) {
-        ereport(ERROR,
-                (errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
-                 errmsg("uint128 value exceeds int4 range")));
-    }
-
-    result = (int32)*a;  // Safe to cast
-    PG_RETURN_INT32(result);
-}
-
-Datum uint16_to_int8(PG_FUNCTION_ARGS) {
-    uint128 *a = PG_GETARG_Uint128_P(0);
-    int64 result;
-
-    // Check for overflow
-    if (*a > INT64_MAX) {
-        ereport(ERROR,
-                (errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
-                 errmsg("uint128 value exceeds int8 range")));
-    }
-
-    result = (int64)*a;  // Safe to cast
-    PG_RETURN_INT64(result);
-}
-
-Datum uint16_to_uint8(PG_FUNCTION_ARGS) {
-    uint128 *a = PG_GETARG_Uint128_P(0);
-    uint64 result;
-
-    // Check for overflow
-    if (*a > UINT64_MAX) {
-        ereport(ERROR,
-                (errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
-                 errmsg("uint128 value exceeds int8 range")));
-    }
-
-    result = (uint64)*a;  // Safe to cast
-    PG_RETURN_UINT64(result);
-}
 
 // Special cast to UUID and back
 

@@ -323,6 +323,26 @@ EOT;
             return $sql;
         };
 
+        $bitwiseShiftFunc = function () use ($extName, $parent, $crossTypesOnly): string {
+            $op = $this->op;
+
+            if (!$crossTypesOnly) {
+                $sql = <<<EOT
+CREATE FUNCTION {$parent->name}_{$op->value}({$parent->name}, int4) RETURNS {$parent->name}
+    IMMUTABLE
+    STRICT
+    LANGUAGE C
+    AS '\$libdir/{$extName}', '{$parent->name}_{$op->value}';
+
+
+EOT;
+            } else {
+                $sql = '';
+            }
+
+            return $sql;
+        };
+
         $notFunc = function () use ($extName, $parent): string {
             $op = $this->op;
 
@@ -339,7 +359,8 @@ EOT;
         $sql = match ($this->op) {
             Op::Eq, Op::Ne, Op::Gt, Op::Lt, Op::Ge, Op::Le => $cmpFunc(),
             Op::Add, Op::Sub, Op::Mul, Op::Div, Op::Mod => $arithmFunc(),
-            Op::Xor, Op::And, Op::Or, Op::Shl, Op::Shr => $bitwiseFunc(),
+            Op::Xor, Op::And, Op::Or => $bitwiseFunc(),
+            Op::Shl, Op::Shr => $bitwiseShiftFunc(),
             Op::Not => $notFunc(),
             default => '',
         };
@@ -400,6 +421,19 @@ EOT;
             return $sql;
         };
 
+        $bitwiseShiftFunc = function () use ($extName, $parent, $crossTypesOnly): string {
+            $op = $this->op;
+            $cfg = $op->config();
+
+            if (!$crossTypesOnly) {
+                $sql = $cfg->toSQL("{$parent->name}_{$op->value}", $parent->name, 'int4') . "\n";
+            } else {
+                $sql = '';
+            }
+
+            return $sql;
+        };
+
         $notFunc = function () use ($extName, $parent): string {
             $op = $this->op;
             $cfg = $op->config();
@@ -410,7 +444,8 @@ EOT;
         $sql = match ($this->op) {
             Op::Eq, Op::Ne, Op::Gt, Op::Lt, Op::Ge, Op::Le => $cmpFunc(),
             Op::Add, Op::Sub, Op::Mul, Op::Div, Op::Mod => $arithmFunc(),
-            Op::Xor, Op::And, Op::Or, Op::Shl, Op::Shr => $bitwiseFunc(),
+            Op::Xor, Op::And, Op::Or => $bitwiseFunc(),
+            Op::Shl, Op::Shr => $bitwiseShiftFunc(),
             Op::Not => $notFunc(),
             default => '',
         };
@@ -594,8 +629,8 @@ $types = [
             new TypeOpConfig(Op::And, types: INT_TYPES),
             new TypeOpConfig(Op::Or, types: INT_TYPES),
             new TypeOpConfig(Op::Not, types: []),
-            new TypeOpConfig(Op::Shl, types: INT_TYPES),
-            new TypeOpConfig(Op::Shr, types: INT_TYPES),
+            new TypeOpConfig(Op::Shl, types: ['int4']),
+            new TypeOpConfig(Op::Shr, types: ['int4']),
         ],
         casts: array_merge(INT_TYPES, ['uuid']),
     ),
@@ -622,8 +657,8 @@ $types = [
             new TypeOpConfig(Op::And, types: INT_TYPES),
             new TypeOpConfig(Op::Or, types: INT_TYPES),
             new TypeOpConfig(Op::Not, types: []),
-            new TypeOpConfig(Op::Shl, types: INT_TYPES),
-            new TypeOpConfig(Op::Shr, types: INT_TYPES),
+            new TypeOpConfig(Op::Shl, types: ['int4']),
+            new TypeOpConfig(Op::Shr, types: ['int4']),
         ],
         casts: INT_TYPES,
     ),

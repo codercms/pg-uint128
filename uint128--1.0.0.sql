@@ -470,54 +470,18 @@ CREATE FUNCTION uint16_not(uint16) RETURNS uint16
     LANGUAGE C
     AS '$libdir/uint128', 'uint16_not';
 
-CREATE FUNCTION uint16_shl(uint16, uint16) RETURNS uint16
+CREATE FUNCTION uint16_shl(uint16, int4) RETURNS uint16
     IMMUTABLE
     STRICT
     LANGUAGE C
     AS '$libdir/uint128', 'uint16_shl';
 
-CREATE FUNCTION uint16_shl_int2(uint16, int2) RETURNS uint16
-    IMMUTABLE
-    STRICT
-    LANGUAGE C
-    AS '$libdir/uint128', 'uint16_shl_int2';
 
-CREATE FUNCTION uint16_shl_int4(uint16, int4) RETURNS uint16
-    IMMUTABLE
-    STRICT
-    LANGUAGE C
-    AS '$libdir/uint128', 'uint16_shl_int4';
-
-CREATE FUNCTION uint16_shl_int8(uint16, int8) RETURNS uint16
-    IMMUTABLE
-    STRICT
-    LANGUAGE C
-    AS '$libdir/uint128', 'uint16_shl_int8';
-
-
-CREATE FUNCTION uint16_shr(uint16, uint16) RETURNS uint16
+CREATE FUNCTION uint16_shr(uint16, int4) RETURNS uint16
     IMMUTABLE
     STRICT
     LANGUAGE C
     AS '$libdir/uint128', 'uint16_shr';
-
-CREATE FUNCTION uint16_shr_int2(uint16, int2) RETURNS uint16
-    IMMUTABLE
-    STRICT
-    LANGUAGE C
-    AS '$libdir/uint128', 'uint16_shr_int2';
-
-CREATE FUNCTION uint16_shr_int4(uint16, int4) RETURNS uint16
-    IMMUTABLE
-    STRICT
-    LANGUAGE C
-    AS '$libdir/uint128', 'uint16_shr_int4';
-
-CREATE FUNCTION uint16_shr_int8(uint16, int8) RETURNS uint16
-    IMMUTABLE
-    STRICT
-    LANGUAGE C
-    AS '$libdir/uint128', 'uint16_shr_int8';
 
 
 CREATE OPERATOR = (
@@ -1010,51 +974,15 @@ CREATE OPERATOR ~ (
 
 CREATE OPERATOR << (
     LEFTARG=uint16,
-    RIGHTARG=uint16,
+    RIGHTARG=int4,
     PROCEDURE=uint16_shl
 );
 
-CREATE OPERATOR << (
-    LEFTARG=uint16,
-    RIGHTARG=int2,
-    PROCEDURE=uint16_shl_int2
-);
-
-CREATE OPERATOR << (
-    LEFTARG=uint16,
-    RIGHTARG=int4,
-    PROCEDURE=uint16_shl_int4
-);
-
-CREATE OPERATOR << (
-    LEFTARG=uint16,
-    RIGHTARG=int8,
-    PROCEDURE=uint16_shl_int8
-);
-
 
 CREATE OPERATOR >> (
     LEFTARG=uint16,
-    RIGHTARG=uint16,
+    RIGHTARG=int4,
     PROCEDURE=uint16_shr
-);
-
-CREATE OPERATOR >> (
-    LEFTARG=uint16,
-    RIGHTARG=int2,
-    PROCEDURE=uint16_shr_int2
-);
-
-CREATE OPERATOR >> (
-    LEFTARG=uint16,
-    RIGHTARG=int4,
-    PROCEDURE=uint16_shr_int4
-);
-
-CREATE OPERATOR >> (
-    LEFTARG=uint16,
-    RIGHTARG=int8,
-    PROCEDURE=uint16_shr_int8
 );
 
 
@@ -1546,54 +1474,18 @@ CREATE FUNCTION uint8_not(uint8) RETURNS uint8
     LANGUAGE C
     AS '$libdir/uint128', 'uint8_not';
 
-CREATE FUNCTION uint8_shl(uint8, uint8) RETURNS uint8
+CREATE FUNCTION uint8_shl(uint8, int4) RETURNS uint8
     IMMUTABLE
     STRICT
     LANGUAGE C
     AS '$libdir/uint128', 'uint8_shl';
 
-CREATE FUNCTION uint8_shl_int2(uint8, int2) RETURNS uint8
-    IMMUTABLE
-    STRICT
-    LANGUAGE C
-    AS '$libdir/uint128', 'uint8_shl_int2';
 
-CREATE FUNCTION uint8_shl_int4(uint8, int4) RETURNS uint8
-    IMMUTABLE
-    STRICT
-    LANGUAGE C
-    AS '$libdir/uint128', 'uint8_shl_int4';
-
-CREATE FUNCTION uint8_shl_int8(uint8, int8) RETURNS uint8
-    IMMUTABLE
-    STRICT
-    LANGUAGE C
-    AS '$libdir/uint128', 'uint8_shl_int8';
-
-
-CREATE FUNCTION uint8_shr(uint8, uint8) RETURNS uint8
+CREATE FUNCTION uint8_shr(uint8, int4) RETURNS uint8
     IMMUTABLE
     STRICT
     LANGUAGE C
     AS '$libdir/uint128', 'uint8_shr';
-
-CREATE FUNCTION uint8_shr_int2(uint8, int2) RETURNS uint8
-    IMMUTABLE
-    STRICT
-    LANGUAGE C
-    AS '$libdir/uint128', 'uint8_shr_int2';
-
-CREATE FUNCTION uint8_shr_int4(uint8, int4) RETURNS uint8
-    IMMUTABLE
-    STRICT
-    LANGUAGE C
-    AS '$libdir/uint128', 'uint8_shr_int4';
-
-CREATE FUNCTION uint8_shr_int8(uint8, int8) RETURNS uint8
-    IMMUTABLE
-    STRICT
-    LANGUAGE C
-    AS '$libdir/uint128', 'uint8_shr_int8';
 
 
 CREATE OPERATOR = (
@@ -2086,51 +1978,15 @@ CREATE OPERATOR ~ (
 
 CREATE OPERATOR << (
     LEFTARG=uint8,
-    RIGHTARG=uint8,
+    RIGHTARG=int4,
     PROCEDURE=uint8_shl
 );
 
-CREATE OPERATOR << (
-    LEFTARG=uint8,
-    RIGHTARG=int2,
-    PROCEDURE=uint8_shl_int2
-);
-
-CREATE OPERATOR << (
-    LEFTARG=uint8,
-    RIGHTARG=int4,
-    PROCEDURE=uint8_shl_int4
-);
-
-CREATE OPERATOR << (
-    LEFTARG=uint8,
-    RIGHTARG=int8,
-    PROCEDURE=uint8_shl_int8
-);
-
 
 CREATE OPERATOR >> (
     LEFTARG=uint8,
-    RIGHTARG=uint8,
+    RIGHTARG=int4,
     PROCEDURE=uint8_shr
-);
-
-CREATE OPERATOR >> (
-    LEFTARG=uint8,
-    RIGHTARG=int2,
-    PROCEDURE=uint8_shr_int2
-);
-
-CREATE OPERATOR >> (
-    LEFTARG=uint8,
-    RIGHTARG=int4,
-    PROCEDURE=uint8_shr_int4
-);
-
-CREATE OPERATOR >> (
-    LEFTARG=uint8,
-    RIGHTARG=int8,
-    PROCEDURE=uint8_shr_int8
 );
 
 
@@ -2287,18 +2143,6 @@ CREATE FUNCTION uint16_or_uint8(uint16, uint8) RETURNS uint16
     AS '$libdir/uint128', 'uint16_or_uint8';
 
 
-CREATE FUNCTION uint16_shl_uint8(uint16, uint8) RETURNS uint16
-    IMMUTABLE
-    STRICT
-    LANGUAGE C
-    AS '$libdir/uint128', 'uint16_shl_uint8';
-
-
-CREATE FUNCTION uint16_shr_uint8(uint16, uint8) RETURNS uint16
-    IMMUTABLE
-    STRICT
-    LANGUAGE C
-    AS '$libdir/uint128', 'uint16_shr_uint8';
 
 
 CREATE OPERATOR = (
@@ -2432,18 +2276,6 @@ CREATE OPERATOR | (
 );
 
 
-CREATE OPERATOR << (
-    LEFTARG=uint16,
-    RIGHTARG=uint8,
-    PROCEDURE=uint16_shl_uint8
-);
-
-
-CREATE OPERATOR >> (
-    LEFTARG=uint16,
-    RIGHTARG=uint8,
-    PROCEDURE=uint16_shr_uint8
-);
 
 
 
@@ -2551,18 +2383,6 @@ CREATE FUNCTION uint8_or_uint16(uint8, uint16) RETURNS uint8
     AS '$libdir/uint128', 'uint8_or_uint16';
 
 
-CREATE FUNCTION uint8_shl_uint16(uint8, uint16) RETURNS uint8
-    IMMUTABLE
-    STRICT
-    LANGUAGE C
-    AS '$libdir/uint128', 'uint8_shl_uint16';
-
-
-CREATE FUNCTION uint8_shr_uint16(uint8, uint16) RETURNS uint8
-    IMMUTABLE
-    STRICT
-    LANGUAGE C
-    AS '$libdir/uint128', 'uint8_shr_uint16';
 
 
 CREATE OPERATOR = (
@@ -2696,18 +2516,6 @@ CREATE OPERATOR | (
 );
 
 
-CREATE OPERATOR << (
-    LEFTARG=uint8,
-    RIGHTARG=uint16,
-    PROCEDURE=uint8_shl_uint16
-);
-
-
-CREATE OPERATOR >> (
-    LEFTARG=uint8,
-    RIGHTARG=uint16,
-    PROCEDURE=uint8_shr_uint16
-);
 
 
 

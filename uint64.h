@@ -1,384 +1,152 @@
 #include "postgres.h"
-//#include "uint_utils.h"
+#include "fmgr.h"
 
-#define DEFINE_UINT64_CMP_FUNCTION(op, funcname, inttype, casttype) \
-PG_FUNCTION_INFO_V1(funcname); \
-Datum funcname(PG_FUNCTION_ARGS) \
-{ \
-    inttype b = PG_GETARG_##casttype(1); \
-    return uint8_##op##_int(fcinfo, (int64)b); \
-}
+#define DEFINE_UINT8_SELF_OVERFLOW_ARITHMETIC_FUNC(opname, overflow_fn) \
+    PG_FUNCTION_INFO_V1(uint8_##opname); \
+    Datum uint8_##opname(PG_FUNCTION_ARGS) { \
+        uint64 a = PG_GETARG_UINT64(0); \
+        uint64 b = PG_GETARG_UINT64(1); \
+        uint64 result; \
+        \
+        if (overflow_fn(a, b, &result)) { \
+            OUT_OF_RANGE_ERR(uint8); \
+        } \
+        PG_RETURN_UINT64(result); \
+    }
 
-#define DEFINE_UINT64_UINT128_CMP_FUNCTION(op, funcname, inttype, casttype) \
-PG_FUNCTION_INFO_V1(funcname); \
-Datum funcname(PG_FUNCTION_ARGS) \
-{ \
-    inttype *b = PG_GETARG_##casttype(1); \
-    if (*b > UINT64_MAX) { \
-         ereport(ERROR, \
-                (errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE), \
-                 errmsg("uint16 value exceeds uint8 range"))); \
-    } \
-    return uint8_##op##_int(fcinfo, (int64)*b); \
-}
+#define DEFINE_UINT8_SELF_DIV_ARITHMETIC_FUNC(opname, operator) \
+    PG_FUNCTION_INFO_V1(uint8_##opname); \
+    Datum uint8_##opname(PG_FUNCTION_ARGS) { \
+        uint64 a = PG_GETARG_UINT64(0); \
+        uint64 b = PG_GETARG_UINT64(1); \
+        \
+        if (b == 0) { \
+            DIVISION_BY_ZERO_ERR; \
+        } \
+        \
+        PG_RETURN_UINT64(a operator b); \
+    }
 
-// TODO: Need to fix comparsion with uint128, because it will overflow
+#define DEFINE_UINT8_SELF_COMPARISON_FUNC(opname, operator) \
+    PG_FUNCTION_INFO_V1(uint8_##opname); \
+    Datum uint8_##opname(PG_FUNCTION_ARGS) { \
+        uint64 a = PG_GETARG_UINT64(0); \
+        uint64 b = PG_GETARG_UINT64(1); \
+        PG_RETURN_BOOL(a operator b); \
+    }
 
-#define DEFINE_UINT64_CMP_FUNCTIONS(op, funcname_prefix) \
-    DEFINE_UINT64_CMP_FUNCTION(op, CppConcat(funcname_prefix, _int2), int16, INT16); \
-    DEFINE_UINT64_CMP_FUNCTION(op, CppConcat(funcname_prefix, _int4), int32, INT32); \
-    DEFINE_UINT64_CMP_FUNCTION(op, CppConcat(funcname_prefix, _int8), int64, INT64); \
-    DEFINE_UINT64_UINT128_CMP_FUNCTION(op, CppConcat(funcname_prefix, _uint16), uint128, Uint128_P);
+#define DEFINE_UINT8_SELF_BITWISE_FUNC(opname, operator) \
+    PG_FUNCTION_INFO_V1(uint8_##opname); \
+    Datum uint8_##opname(PG_FUNCTION_ARGS) { \
+        uint64 a = PG_GETARG_UINT64(0); \
+        uint64 b = PG_GETARG_UINT64(1); \
+        PG_RETURN_UINT64(a operator b); \
+    }
 
-#define DEFINE_UINT64_ARITHMETIC_FUNCTION(op, funcname, inttype, casttype) \
-PG_FUNCTION_INFO_V1(funcname); \
-Datum funcname(PG_FUNCTION_ARGS) \
-{ \
-    inttype b = PG_GETARG_##casttype(1); \
-    return uint8_##op##_int(fcinfo, (int64)b); \
-}
+#define DEFINE_UINT8_SELF_BITWISE_SHIFT_FUNC(opname, operator) \
+    PG_FUNCTION_INFO_V1(uint8_##opname); \
+    Datum uint8_##opname(PG_FUNCTION_ARGS) { \
+        uint64 a = PG_GETARG_UINT64(0); \
+        int32 shift = PG_GETARG_INT32(1); \
+        PG_RETURN_UINT64(a operator shift); \
+    }
 
-#define DEFINE_UINT64_UINT128_ARITHMETIC_FUNCTION(op, funcname, inttype, casttype) \
-PG_FUNCTION_INFO_V1(funcname); \
-Datum funcname(PG_FUNCTION_ARGS) \
-{ \
-    inttype *b = PG_GETARG_##casttype(1); \
-    if (*b > UINT64_MAX) { \
-         ereport(ERROR, \
-                (errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE), \
-                 errmsg("uint16 value exceeds uint8 range"))); \
-    } \
-    return uint8_##op##_int(fcinfo, (int64)*b); \
-}
+#define DEFINE_UINT8_FROM_INT_FUNC(pgtype, ctype, pg_getarg_macro) \
+    PG_FUNCTION_INFO_V1(uint8_from_##pgtype); \
+    Datum uint8_from_##pgtype(PG_FUNCTION_ARGS) { \
+        ctype a = pg_getarg_macro(0); \
+        PG_RETURN_UINT64((uint64)a); \
+    }
 
-#define DEFINE_UINT64_ARITHMETIC_FUNCTIONS(op, funcname_prefix) \
-    DEFINE_UINT64_ARITHMETIC_FUNCTION(op, CppConcat(funcname_prefix, _int2), int16, INT16); \
-    DEFINE_UINT64_ARITHMETIC_FUNCTION(op, CppConcat(funcname_prefix, _int4), int32, INT32); \
-    DEFINE_UINT64_ARITHMETIC_FUNCTION(op, CppConcat(funcname_prefix, _int8), int64, INT64); \
-    DEFINE_UINT64_UINT128_ARITHMETIC_FUNCTION(op, CppConcat(funcname_prefix, _uint16), uint128, Uint128_P);
+#define DEFINE_UINT8_TO_INT_FUNC(pgtype, ctype, max_value, pg_return_macro) \
+    PG_FUNCTION_INFO_V1(uint8_to_##pgtype); \
+    Datum uint8_to_##pgtype(PG_FUNCTION_ARGS) { \
+        uint64 a = PG_GETARG_UINT64(0); \
+        ctype result; \
+        \
+        /* Check for overflow */ \
+        if (a > max_value) { \
+            ereport(ERROR, \
+                    (errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE), \
+                     errmsg("uint8 value exceeds " #pgtype " range"))); \
+        } \
+        \
+        result = (ctype)a;  /* Safe to cast */ \
+        pg_return_macro(result); \
+    }
 
+#define DEFINE_UINT8_CMP_INT_FUNC(pgtype, ctype, pg_getarg_macro, opname, operator) \
+    PG_FUNCTION_INFO_V1(uint8_##opname##_##pgtype); \
+    Datum uint8_##opname##_##pgtype(PG_FUNCTION_ARGS) { \
+        uint64 a = PG_GETARG_UINT64(0); \
+        ctype  b = pg_getarg_macro(1); \
+        \
+        PG_RETURN_BOOL(a operator b); \
+    }
 
-#define DEFINE_UINT64_BITWISE_FUNCTION(op, funcname, inttype, casttype) \
-PG_FUNCTION_INFO_V1(funcname); \
-Datum funcname(PG_FUNCTION_ARGS) \
-{ \
-    inttype b = PG_GETARG_##casttype(1); \
-    return uint8_##op##_int(fcinfo, (int64)b); \
-}
+#define DEFINE_UINT8_CMP_INT_FUNCS(opname, operator) \
+    DEFINE_UINT8_CMP_INT_FUNC(int2, int16, PG_GETARG_INT16, opname, operator); \
+    DEFINE_UINT8_CMP_INT_FUNC(int4, int32, PG_GETARG_INT32, opname, operator); \
+    DEFINE_UINT8_CMP_INT_FUNC(int8, int64, PG_GETARG_INT64, opname, operator); \
+    DEFINE_UINT8_CMP_INT_FUNC(uint16, uint128, *PG_GETARG_Uint128_P, opname, operator);
 
-#define DEFINE_UINT64_UINT128_BITWISE_FUNCTION(op, funcname, inttype, casttype) \
-PG_FUNCTION_INFO_V1(funcname); \
-Datum funcname(PG_FUNCTION_ARGS) \
-{ \
-    inttype *b = PG_GETARG_##casttype(1); \
-    if (*b > UINT64_MAX) { \
-         ereport(ERROR, \
-                (errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE), \
-                 errmsg("uint16 value exceeds uint8 range"))); \
-    } \
-    return uint8_##op##_int(fcinfo, (int64)*b); \
-}
+#define DEFINE_UINT8_INT_OVERFLOW_ARITHMETIC_FUNC(pgtype, ctype, pg_getarg_macro, opname, overflow_fn) \
+    PG_FUNCTION_INFO_V1(uint8_##opname##_##pgtype); \
+    Datum uint8_##opname##_##pgtype(PG_FUNCTION_ARGS) { \
+        uint64 a = PG_GETARG_UINT64(0); \
+        ctype bRaw = pg_getarg_macro(1); \
+        uint128 b = (uint8)bRaw; \
+        uint64 result; \
+        \
+        if (overflow_fn(a, b, &result)) { \
+            OUT_OF_RANGE_ERR(uint8); \
+        } \
+        PG_RETURN_UINT64(result); \
+    }
 
+#define DEFINE_UINT8_INT_OVERFLOW_ARITHMETIC_FUNCS(opname, overflow_fn) \
+    DEFINE_UINT8_INT_OVERFLOW_ARITHMETIC_FUNC(int2, int16, PG_GETARG_INT16, opname, overflow_fn); \
+    DEFINE_UINT8_INT_OVERFLOW_ARITHMETIC_FUNC(int4, int32, PG_GETARG_INT32, opname, overflow_fn); \
+    DEFINE_UINT8_INT_OVERFLOW_ARITHMETIC_FUNC(int8, int64, PG_GETARG_INT64, opname, overflow_fn); \
+    DEFINE_UINT8_INT_OVERFLOW_ARITHMETIC_FUNC(uint16, uint128, *PG_GETARG_Uint128_P, opname, overflow_fn);
 
-#define DEFINE_UINT64_BITWISE_FUNCTIONS(op, funcname_prefix) \
-    DEFINE_UINT64_BITWISE_FUNCTION(op, CppConcat(funcname_prefix, _int2), int16, INT16); \
-    DEFINE_UINT64_BITWISE_FUNCTION(op, CppConcat(funcname_prefix, _int4), int32, INT32); \
-    DEFINE_UINT64_BITWISE_FUNCTION(op, CppConcat(funcname_prefix, _int8), int64, INT64); \
-    DEFINE_UINT64_UINT128_BITWISE_FUNCTION(op, CppConcat(funcname_prefix, _uint16), uint128, Uint128_P);
+#define DEFINE_UINT8_INT_DIV_ARITHMETIC_FUNC(pgtype, ctype, pg_getarg_macro, opname, operator) \
+    PG_FUNCTION_INFO_V1(uint8_##opname##_##pgtype); \
+    Datum uint8_##opname##_##pgtype(PG_FUNCTION_ARGS) { \
+        uint64 a = PG_GETARG_UINT64(0); \
+        ctype  b = pg_getarg_macro(1); \
+        \
+        if (b == 0) { \
+            DIVISION_BY_ZERO_ERR; \
+        } \
+        \
+        PG_RETURN_UINT64(a operator ((uint64)b)); \
+    }
 
+#define DEFINE_UINT8_INT_DIV_ARITHMETIC_FUNCS(opname, operator) \
+    DEFINE_UINT8_INT_DIV_ARITHMETIC_FUNC(int2, int16, PG_GETARG_INT16, opname, operator); \
+    DEFINE_UINT8_INT_DIV_ARITHMETIC_FUNC(int4, int32, PG_GETARG_INT32, opname, operator); \
+    DEFINE_UINT8_INT_DIV_ARITHMETIC_FUNC(int8, int64, PG_GETARG_INT64, opname, operator); \
+    DEFINE_UINT8_INT_DIV_ARITHMETIC_FUNC(uint16, uint128, *PG_GETARG_Uint128_P, opname, operator);
 
-static inline Datum uint8_eq_int(PG_FUNCTION_ARGS, int64 val2)
+#define DEFINE_UINT8_INT_BITWISE_FUNC(pgtype, ctype, pg_getarg_macro, opname, operator) \
+    PG_FUNCTION_INFO_V1(uint8_##opname##_##pgtype); \
+    Datum uint8_##opname##_##pgtype(PG_FUNCTION_ARGS) { \
+        uint64 a = PG_GETARG_UINT64(0); \
+        ctype  b = pg_getarg_macro(1); \
+        PG_RETURN_UINT64(a operator ((uint64)b)); \
+    }
+
+#define DEFINE_UINT8_INT_BITWISE_FUNCS(opname, operator) \
+    DEFINE_UINT8_INT_BITWISE_FUNC(int2, int16, PG_GETARG_INT16, opname, operator); \
+    DEFINE_UINT8_INT_BITWISE_FUNC(int4, int32, PG_GETARG_INT32, opname, operator); \
+    DEFINE_UINT8_INT_BITWISE_FUNC(int8, int64, PG_GETARG_INT64, opname, operator); \
+    DEFINE_UINT8_INT_BITWISE_FUNC(uint16, uint128, *PG_GETARG_Uint128_P, opname, operator);
+
+static int uint64_internal_cmp(const uint64 arg1, const uint64 arg2)
 {
-	uint64		val1 = PG_GETARG_UINT64(0);
+    if (arg1 < arg2) return -1; // arg1 is less than arg2
+    if (arg1 > arg2) return 1;  // arg1 is greater than arg2
 
-    if (val2 < 0) {
-        PG_RETURN_BOOL(false);
-    }
-    
-	PG_RETURN_BOOL(val1 == val2);
-}
-
-static inline Datum uint8_ne_int(PG_FUNCTION_ARGS, int64 val2)
-{
-	uint64		val1 = PG_GETARG_UINT64(0);
-
-    if (val2 < 0) {
-        PG_RETURN_BOOL(true);
-    }
-    
-	PG_RETURN_BOOL(val1 != val2);
-}
-
-static inline Datum uint8_lt_int(PG_FUNCTION_ARGS, int64 val2)
-{
-	uint64		val1 = PG_GETARG_UINT64(0);
-
-    if (val2 < 0) {
-        PG_RETURN_BOOL(false);
-    }
-    
-	PG_RETURN_BOOL(val1 < val2);
-}
-
-static inline Datum uint8_gt_int(PG_FUNCTION_ARGS, int64 val2)
-{
-	uint64		val1 = PG_GETARG_UINT64(0);
-
-    if (val2 < 0) {
-        PG_RETURN_BOOL(true);
-    }
-    
-	PG_RETURN_BOOL(val1 > val2);
-}
-
-static inline Datum uint8_le_int(PG_FUNCTION_ARGS, int64 val2)
-{
-	uint64		val1 = PG_GETARG_UINT64(0);
-
-    if (val2 < 0) {
-        PG_RETURN_BOOL(false);
-    }
-    
-	PG_RETURN_BOOL(val1 <= val2);
-}
-
-static inline Datum uint8_ge_int(PG_FUNCTION_ARGS, int64 val2)
-{
-	uint64		val1 = PG_GETARG_UINT64(0);
-
-    if (val2 < 0) {
-        PG_RETURN_BOOL(true);
-    }
-    
-	PG_RETURN_BOOL(val1 >= val2);
-}
-
-
-static inline Datum uint8_add_int(PG_FUNCTION_ARGS, int64 b)
-{
-	uint64		a = PG_GETARG_UINT64(0);
-	uint64		result;
-
-    if (b == 0) {
-        PG_RETURN_UINT64(a);
-    }
-
-    // Negation case
-    if (b < 0) {
-        b = -b;
-    
-        if (a < (uint64)b) {
-            ereport(ERROR,
-                (
-                    errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
-                    errmsg("uint8 out of range")
-                )
-            );
-        }
-
-        result = a - b;
-
-        PG_RETURN_UINT64(result);
-    }
-
-    // Check for overflow
-    if (a > UINT64_MAX - (uint64)b) {
-        ereport(ERROR,
-            (
-                errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
-                errmsg("uint8 out of range")
-            )
-        );
-    }
-
-    result = a + b;
-
-    PG_RETURN_UINT64(result);
-}
-
-static inline Datum uint8_sub_int(PG_FUNCTION_ARGS, int64 b)
-{
-	uint64		a = PG_GETARG_UINT64(0);
-	uint64		result;
-
-    if (b == 0) {
-        PG_RETURN_UINT64(a);
-    }
-
-    // Addition case
-    if (b < 0) {
-        b = -b;
-
-         // Check for overflow
-        if (a > UINT64_MAX - (uint64)b) {
-            ereport(ERROR,
-                (
-                    errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
-                    errmsg("uint8 out of range")
-                )
-            );
-        }
-
-        result = a + b;
-
-        PG_RETURN_UINT64(result);
-    }
-
-    // Check for overflow
-    if ((uint64)b > a) {
-        ereport(ERROR,
-            (
-                errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
-                errmsg("uint8 out of range")
-            )
-        );
-    }
-
-    result = a - b;
-
-    PG_RETURN_UINT64(result);
-}
-
-static inline Datum uint8_mul_int(PG_FUNCTION_ARGS, int64 b)
-{
-    uint64		a = PG_GETARG_UINT64(0);
-	uint64		result;
-
-    if (b < 0) {
-        ereport(ERROR,
-            (
-                errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
-                errmsg("uint8 cannot be multiplied by negative int")
-            )
-        );
-    }
-
-    if (a == 0 || b == 0) {
-        PG_RETURN_UINT64(a);
-    }
-
-    // Check for overflow
-    if (a > UINT64_MAX / (uint64)b) {
-        ereport(ERROR,
-            (
-                errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
-                errmsg("uint8 out of range")
-            )
-        );
-    }
-
-    result = a * b;
-
-    PG_RETURN_UINT64(result);
-}
-
-static inline Datum uint8_div_int(PG_FUNCTION_ARGS, int64 b)
-{
-    uint64		a = PG_GETARG_UINT64(0);
-	uint64		result;
-
-    if (b == 0) {
-        ereport(ERROR,
-            (
-                errcode(ERRCODE_DIVISION_BY_ZERO),
-                errmsg("division by zero")
-            )
-        );
-    }
-
-    if (b < 0) {
-        ereport(ERROR,
-            (
-                errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
-                errmsg("uint8 cannot be multiplied by negative int")
-            )
-        );
-    }
-
-    if (a == 0) {
-        PG_RETURN_UINT64(a);
-    }
-
-    result = a / b;
-
-    PG_RETURN_UINT64(result);
-}
-
-static inline Datum uint8_mod_int(PG_FUNCTION_ARGS, int64 b)
-{
-    uint64		a = PG_GETARG_UINT64(0);
-	uint64		result;
-
-    if (b == 0) {
-        ereport(ERROR,
-            (
-                errcode(ERRCODE_DIVISION_BY_ZERO),
-                errmsg("division by zero")
-            )
-        );
-    }
-
-    if (b < 0) {
-        ereport(ERROR,
-            (
-                errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
-                errmsg("uint8 cannot be multiplied by negative int")
-            )
-        );
-    }
-
-    result = a % b;
-
-    PG_RETURN_UINT64(result);
-}
-
-
-static inline Datum uint8_xor_int(PG_FUNCTION_ARGS, int64 b)
-{
-	uint64		a = PG_GETARG_UINT64(0);
-	uint64		result;
-
-    result = a ^ (uint64)b;
-
-    PG_RETURN_UINT64(result);
-}
-
-static inline Datum uint8_and_int(PG_FUNCTION_ARGS, int64 b)
-{
-	uint64		a = PG_GETARG_UINT64(0);
-	uint64		result;
-
-    result = a & (uint64)b;
-
-    PG_RETURN_UINT64(result);
-}
-
-static inline Datum uint8_or_int(PG_FUNCTION_ARGS, int64 b)
-{
-	uint64		a = PG_GETARG_UINT64(0);
-	uint64		result;
-
-    result = a | (uint64)b;
-
-    PG_RETURN_UINT64(result);
-}
-
-static inline Datum uint8_shl_int(PG_FUNCTION_ARGS, int64 b)
-{
-	uint64		a = PG_GETARG_UINT64(0);
-	uint64		result;
-
-    result = a << b;
-
-    PG_RETURN_UINT64(result);
-}
-
-static inline Datum uint8_shr_int(PG_FUNCTION_ARGS, int64 b)
-{
-	uint64		a = PG_GETARG_UINT64(0);
-	uint64		result;
-
-    result = a >> b;
-
-    PG_RETURN_UINT64(result);
+    return 0;                     // arg1 is equal to arg2
 }

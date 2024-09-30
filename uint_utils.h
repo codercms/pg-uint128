@@ -15,6 +15,22 @@
     #define PG_GETARG_UINT64(n)  DatumGetUInt64(PG_GETARG_DATUM(n))
 #endif
 
+
+#define DIVISION_BY_ZERO_ERR \
+    ereport(ERROR, \
+        ( \
+            errcode(ERRCODE_DIVISION_BY_ZERO), \
+            errmsg("division by zero") \
+        ) \
+    )
+
+#define OUT_OF_RANGE_ERR(pgtype) ereport(ERROR, \
+    ( \
+        errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE), \
+        errmsg(#pgtype " out of range") \
+    ) \
+); \
+
 uint32_t Uint32LE(uint8_t*);
 uint32_t Uint32BE(uint8_t*);
 uint64_t Uint64LE(uint8_t*);
@@ -106,4 +122,80 @@ static inline Datum hashuint8(uint64 val)
 	lohalf ^= hihalf;
 
 	return hash_uint32(lohalf);
+}
+
+static inline bool add_u128_overflow(uint128 a, uint128 b, uint128 *result) {
+    uint128 res = a + b;
+
+    // Check for overflow: If res is less than either a or b, overflow occurred
+    if (res < a) {
+        *result = 0; // Assign a dummy value to avoid warnings
+        return true; // Overflow detected
+    }
+    
+    *result = res;
+    return false; // No overflow
+}
+
+static inline bool sub_u128_overflow(uint128 a, uint128 b, uint128 *result) {
+    if (b > a) {
+        *result = 0; // Dummy value to avoid warnings
+        return true; // Overflow detected
+    }
+    *result = a - b;
+    return false; // No overflow
+}
+
+static inline bool mul_u128_overflow(uint128 a, uint128 b, uint128 *result) {
+    if (a == 0 || b == 0) {
+        *result = 0; // No overflow, product is zero
+        return false;
+    }
+    
+    // Check for overflow: If a > UINT128_MAX / b, overflow occurred
+    if (a > (uint128)-1 / b) {
+        *result = 0; // Assign a dummy value to avoid warnings
+        return true; // Overflow detected
+    }
+    
+    *result = a * b;
+    return false; // No overflow
+}
+
+static inline bool add_u64_overflow(uint64 a, uint64 b, uint64 *result) {
+    uint64 res = a + b;
+
+    // Check for overflow: If res is less than either a or b, overflow occurred
+    if (res < a) {
+        *result = 0; // Assign a dummy value to avoid warnings
+        return true; // Overflow detected
+    }
+    
+    *result = res;
+    return false; // No overflow
+}
+
+static inline bool sub_u64_overflow(uint64 a, uint64 b, uint64 *result) {
+    if (b > a) {
+        *result = 0; // Dummy value to avoid warnings
+        return true; // Overflow detected
+    }
+    *result = a - b;
+    return false; // No overflow
+}
+
+static inline bool mul_u64_overflow(uint64 a, uint64 b, uint64 *result) {
+    if (a == 0 || b == 0) {
+        *result = 0; // No overflow, product is zero
+        return false;
+    }
+    
+    // Check for overflow: If a > UINT128_MAX / b, overflow occurred
+    if (a > (uint64)-1 / b) {
+        *result = 0; // Assign a dummy value to avoid warnings
+        return true; // Overflow detected
+    }
+    
+    *result = a * b;
+    return false; // No overflow
 }
