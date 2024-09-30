@@ -54,6 +54,9 @@ Datum uint16_to_int2(PG_FUNCTION_ARGS);
 Datum uint16_to_int4(PG_FUNCTION_ARGS);
 Datum uint16_to_int8(PG_FUNCTION_ARGS);
 
+Datum uint16_from_uuid(PG_FUNCTION_ARGS);
+Datum uint16_to_uuid(PG_FUNCTION_ARGS);
+
 PG_FUNCTION_INFO_V1(uint16_in);
 PG_FUNCTION_INFO_V1(uint16_out);
 PG_FUNCTION_INFO_V1(uint16_send);
@@ -89,6 +92,9 @@ PG_FUNCTION_INFO_V1(uint16_from_int8);
 PG_FUNCTION_INFO_V1(uint16_to_int2);
 PG_FUNCTION_INFO_V1(uint16_to_int4);
 PG_FUNCTION_INFO_V1(uint16_to_int8);
+
+PG_FUNCTION_INFO_V1(uint16_from_uuid);
+PG_FUNCTION_INFO_V1(uint16_to_uuid);
 
 // Serialization ops
 
@@ -555,4 +561,26 @@ Datum uint16_to_int8(PG_FUNCTION_ARGS) {
 
     result = (int64)*a;  // Safe to cast
     PG_RETURN_INT64(result);
+}
+
+// Special cast to UUID and back
+
+Datum uint16_from_uuid(PG_FUNCTION_ARGS)
+{
+    pg_uuid_t *uuid = PG_GETARG_UUID_P(0);
+    uint128 *result = (uint128 *)palloc(sizeof(uint128));
+
+    *result = be128toh(*(uint128*)(uuid->data));
+
+    PG_RETURN_Uint128_P(result);
+}
+
+Datum uint16_to_uuid(PG_FUNCTION_ARGS)
+{
+    uint128 *uint_value = PG_GETARG_Uint128_P(0);
+    pg_uuid_t *uuid = (pg_uuid_t *)palloc(sizeof(pg_uuid_t));
+
+    *(uint128*)(uuid->data) = htobe128(*uint_value);
+    
+    PG_RETURN_UUID_P(uuid);
 }
