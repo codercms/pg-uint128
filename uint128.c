@@ -46,6 +46,14 @@ Datum uint16_not(PG_FUNCTION_ARGS);
 Datum uint16_shl(PG_FUNCTION_ARGS);
 Datum uint16_shr(PG_FUNCTION_ARGS);
 
+Datum uint16_from_int2(PG_FUNCTION_ARGS);
+Datum uint16_from_int4(PG_FUNCTION_ARGS);
+Datum uint16_from_int8(PG_FUNCTION_ARGS);
+
+Datum uint16_to_int2(PG_FUNCTION_ARGS);
+Datum uint16_to_int4(PG_FUNCTION_ARGS);
+Datum uint16_to_int8(PG_FUNCTION_ARGS);
+
 PG_FUNCTION_INFO_V1(uint16_in);
 PG_FUNCTION_INFO_V1(uint16_out);
 PG_FUNCTION_INFO_V1(uint16_send);
@@ -73,6 +81,16 @@ PG_FUNCTION_INFO_V1(uint16_or);
 PG_FUNCTION_INFO_V1(uint16_not);
 PG_FUNCTION_INFO_V1(uint16_shl);
 PG_FUNCTION_INFO_V1(uint16_shr);
+
+PG_FUNCTION_INFO_V1(uint16_from_int2);
+PG_FUNCTION_INFO_V1(uint16_from_int4);
+PG_FUNCTION_INFO_V1(uint16_from_int8);
+
+PG_FUNCTION_INFO_V1(uint16_to_int2);
+PG_FUNCTION_INFO_V1(uint16_to_int4);
+PG_FUNCTION_INFO_V1(uint16_to_int8);
+
+// Serialization ops
 
 Datum uint16_in(PG_FUNCTION_ARGS)
 {
@@ -179,6 +197,8 @@ Datum uint16_send(PG_FUNCTION_ARGS)
 	PG_RETURN_BYTEA_P(pq_endtypsend(&buf));
 }
 
+// Comparision ops
+
 Datum uint16_eq(PG_FUNCTION_ARGS)
 {
 	uint128		*val1 = PG_GETARG_Uint128_P(0);
@@ -244,6 +264,8 @@ static int uint128_internal_cmp(const uint128 *arg1, const uint128 *arg2)
     return 0;                     // arg1 is equal to arg2
 }
 
+// Hashing ops
+
 Datum uint16_hash(PG_FUNCTION_ARGS)
 {
     uint128* val = PG_GETARG_Uint128_P(0);
@@ -267,6 +289,8 @@ Datum hashuint8(uint64 val)
 
 	return hash_uint32(lohalf);
 }
+
+// Arithmetic ops
 
 #define INT128_MAX (__int128) (((unsigned __int128) 1 << ((__SIZEOF_INT128__ * __CHAR_BIT__) - 1)) - 1)
 #define INT128_MIN (-INT128_MAX - 1)
@@ -454,4 +478,81 @@ Datum uint16_shr(PG_FUNCTION_ARGS) {
     *result = *a >> shift;  // Bitwise shift right
 
     PG_RETURN_Uint128_P(result);
+}
+
+// Cast ops
+
+Datum uint16_from_int2(PG_FUNCTION_ARGS) {
+    int16 a = PG_GETARG_INT16(0);
+    uint128 *result;
+
+    result = (uint128 *) palloc(sizeof(uint128));
+    *result = (uint128)a;  // Convert int2 to uint128
+
+    PG_RETURN_Uint128_P(result);
+}
+
+Datum uint16_from_int4(PG_FUNCTION_ARGS) {
+    int32 a = PG_GETARG_INT32(0);
+    uint128 *result;
+
+    result = (uint128 *) palloc(sizeof(uint128));
+    *result = (uint128)a;  // Convert int4 to uint128
+
+    PG_RETURN_Uint128_P(result);
+}
+
+Datum uint16_from_int8(PG_FUNCTION_ARGS) {
+    int64 a = PG_GETARG_INT64(0);
+    uint128 *result;
+
+    result = (uint128 *) palloc(sizeof(uint128));
+    *result = (uint128)a;  // Convert int8 to uint128
+
+    PG_RETURN_Uint128_P(result);
+}
+
+Datum uint16_to_int2(PG_FUNCTION_ARGS) {
+    uint128 *a = PG_GETARG_Uint128_P(0);
+    int16 result;
+
+    // Check for overflow
+    if (*a > INT16_MAX) {
+        ereport(ERROR,
+                (errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
+                 errmsg("uint128 value exceeds int2 range")));
+    }
+
+    result = (int16)*a;  // Safe to cast
+    PG_RETURN_INT16(result);
+}
+
+Datum uint16_to_int4(PG_FUNCTION_ARGS) {
+    uint128 *a = PG_GETARG_Uint128_P(0);
+    int32 result;
+
+    // Check for overflow
+    if (*a > INT32_MAX) {
+        ereport(ERROR,
+                (errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
+                 errmsg("uint128 value exceeds int4 range")));
+    }
+
+    result = (int32)*a;  // Safe to cast
+    PG_RETURN_INT32(result);
+}
+
+Datum uint16_to_int8(PG_FUNCTION_ARGS) {
+    uint128 *a = PG_GETARG_Uint128_P(0);
+    int64 result;
+
+    // Check for overflow
+    if (*a > INT64_MAX) {
+        ereport(ERROR,
+                (errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE),
+                 errmsg("uint128 value exceeds int8 range")));
+    }
+
+    result = (int64)*a;  // Safe to cast
+    PG_RETURN_INT64(result);
 }

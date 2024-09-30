@@ -44,6 +44,38 @@ CREATE CAST (uint16 AS double precision) WITH INOUT AS IMPLICIT;
 CREATE CAST (uint16 AS numeric) WITH INOUT AS IMPLICIT;
 CREATE CAST (uint16 AS real) WITH INOUT AS IMPLICIT;
 
+CREATE FUNCTION uint16_from_int2(int2) RETURNS uint16
+    AS '$libdir/uint128', 'uint16_from_int2'
+    LANGUAGE C IMMUTABLE STRICT;
+
+CREATE FUNCTION uint16_from_int4(int4) RETURNS uint16
+    AS '$libdir/uint128', 'uint16_from_int4'
+    LANGUAGE C IMMUTABLE STRICT;
+
+CREATE FUNCTION uint16_from_int8(int8) RETURNS uint16
+    AS '$libdir/uint128', 'uint16_from_int8'
+    LANGUAGE C IMMUTABLE STRICT;
+
+CREATE FUNCTION uint16_to_int2(uint16) RETURNS int2
+    AS '$libdir/uint128', 'uint16_to_int2'
+    LANGUAGE C IMMUTABLE STRICT;
+
+CREATE FUNCTION uint16_to_int4(uint16) RETURNS int4
+    AS '$libdir/uint128', 'uint16_to_int4'
+    LANGUAGE C IMMUTABLE STRICT;
+
+CREATE FUNCTION uint16_to_int8(uint16) RETURNS int8
+    AS '$libdir/uint128', 'uint16_to_int8'
+    LANGUAGE C IMMUTABLE STRICT;
+
+CREATE CAST (int2 AS uint16) WITH FUNCTION uint16_from_int2(int2) AS IMPLICIT;
+CREATE CAST (int4 AS uint16) WITH FUNCTION uint16_from_int4(int4) AS IMPLICIT;
+CREATE CAST (int8 AS uint16) WITH FUNCTION uint16_from_int8(int8) AS IMPLICIT;
+
+CREATE CAST (uint16 AS int2) WITH FUNCTION uint16_to_int2(uint16) AS IMPLICIT;
+CREATE CAST (uint16 AS int4) WITH FUNCTION uint16_to_int4(uint16) AS IMPLICIT;
+CREATE CAST (uint16 AS int8) WITH FUNCTION uint16_to_int8(uint16) AS IMPLICIT;
+
 -- Ops
 
 CREATE FUNCTION uint16_eq(uint16, uint16) RETURNS boolean
