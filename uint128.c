@@ -1,8 +1,6 @@
 #include "postgres.h"
 #include "fmgr.h"
-#include "utils/builtins.h"
 #include "utils/uuid.h"
-#include "utils/numeric.h"
 #include "utils/memutils.h"
 #include <access/hash.h>
 #include "lib/stringinfo.h"
@@ -28,11 +26,11 @@ PG_FUNCTION_INFO_V1(uint16_to_uuid);
 
 Datum uint16_in(PG_FUNCTION_ARGS)
 {
-	char	   *num_str = PG_GETARG_CSTRING(0);
-	uint128    *num;
+    char *num_str = PG_GETARG_CSTRING(0);
+    uint128 *num;
 
     if (num_str == NULL)
-		elog(ERROR, "NULL pointer");
+        elog(ERROR, "NULL pointer");
 
     if (*num_str == 0) {
         ereport(
@@ -46,7 +44,7 @@ Datum uint16_in(PG_FUNCTION_ARGS)
 
     // elog(INFO, "uint16in num_str: %s", num_str);
 
-	num = (uint128*)palloc(sizeof(uint128));
+    num = (uint128 *) palloc(sizeof(uint128));
     *num = 0;
 
     if (parse_uint128(num_str, num) != 0) {
@@ -63,35 +61,35 @@ Datum uint16_in(PG_FUNCTION_ARGS)
 
     // elog(INFO, "uint16in high %llu low %llu", (uint64)((*num) >> 64), (uint64)low_part);
 
-	PG_RETURN_Uint128_P(num);
+    PG_RETURN_Uint128_P(num);
 }
 
 Datum uint16_out(PG_FUNCTION_ARGS)
 {
-	uint128  *num = PG_GETARG_Uint128_P(0);
-    char     *buf;
-    char     *bufPtr;
-    char     *str;
+    uint128 *num = PG_GETARG_Uint128_P(0);
+    char *buf;
+    char *bufPtr;
+    char *str;
 
     if (num == NULL)
-		elog(ERROR, "NULL pointer");
+        elog(ERROR, "NULL pointer");
 
     // elog(INFO, "uint16out high %llu low %llu", (uint64)((*num) >> 64), (uint64)(*num));
 
-    buf = (char*)palloc(41);
+    buf = (char *) palloc(41);
 
     bufPtr = uint128_to_string_v2(*num, buf, 41);
 
     // elog(INFO, "uint16out buf (%p) bufPtr (%p): %s", buf, bufPtr, bufPtr);
 
-    str = (char*)palloc(strlen(bufPtr));
+    str = (char *) palloc(strlen(bufPtr));
     strcpy(str, bufPtr);
 
     pfree(buf);
 
     // elog(INFO, "uint16out str: %s", str);
 
-	PG_RETURN_CSTRING(str);
+    PG_RETURN_CSTRING(str);
 }
 
 /*
@@ -99,22 +97,22 @@ Datum uint16_out(PG_FUNCTION_ARGS)
  */
 Datum uint16_recv(PG_FUNCTION_ARGS)
 {
-    uint128* result;
+    uint128 *result;
     uint64 high_part, low_part;
 
-	StringInfo	buf = (StringInfo)PG_GETARG_POINTER(0);
+    StringInfo buf = (StringInfo) PG_GETARG_POINTER(0);
 
     // Read the high 64 bits from the buffer
     high_part = pq_getmsgint64(buf);
     // Read the low 64 bits from the buffer
     low_part = pq_getmsgint64(buf);
 
-    result = (uint128*)palloc(sizeof(uint128));
+    result = (uint128 *) palloc(sizeof(uint128));
 
     // Combine the two 64-bit parts into a 128-bit value
-    *result = ((uint128)high_part << 64) | (uint128)low_part;
+    *result = ((uint128) high_part << 64) | (uint128) low_part;
 
-	PG_RETURN_Uint128_P(result);
+    PG_RETURN_Uint128_P(result);
 }
 
 /*
@@ -123,12 +121,12 @@ Datum uint16_recv(PG_FUNCTION_ARGS)
 Datum uint16_send(PG_FUNCTION_ARGS)
 {
     StringInfoData buf;
-	uint128* arg1 = PG_GETARG_Uint128_P(0);
+    uint128 *arg1 = PG_GETARG_Uint128_P(0);
 
-	pq_begintypsend(&buf);
-	pq_sendint64(&buf, (uint64)((*arg1) >> 64)); // Extract the high 64 bits
-	pq_sendint64(&buf, (uint64)(*arg1));         // Extract the low 64 bits
-	PG_RETURN_BYTEA_P(pq_endtypsend(&buf));
+    pq_begintypsend(&buf);
+    pq_sendint64(&buf, (uint64) ((*arg1) >> 64)); // Extract the high 64 bits
+    pq_sendint64(&buf, (uint64) (*arg1)); // Extract the low 64 bits
+    PG_RETURN_BYTEA_P(pq_endtypsend(&buf));
 }
 
 // Comparision ops
@@ -150,19 +148,19 @@ DEFINE_UINT16_CMP_INT_FUNCS(ge, >=);
 /* handler for btree index operator */
 Datum uint16_cmp(PG_FUNCTION_ARGS)
 {
-	uint128  *arg1 = PG_GETARG_Uint128_P(0);
-	uint128  *arg2 = PG_GETARG_Uint128_P(1);
+    uint128 *arg1 = PG_GETARG_Uint128_P(0);
+    uint128 *arg2 = PG_GETARG_Uint128_P(1);
 
-	PG_RETURN_INT32(uint128_internal_cmp(arg1, arg2));
+    PG_RETURN_INT32(uint128_internal_cmp(arg1, arg2));
 }
 
 // Hashing ops
 
 Datum uint16_hash(PG_FUNCTION_ARGS)
 {
-    uint128* val = PG_GETARG_Uint128_P(0);
-    uint64 high = (uint64)(*val >> 64);
-    uint64 low = (uint64)(*val);
+    uint128 *val = PG_GETARG_Uint128_P(0);
+    uint64 high = (uint64) (*val >> 64);
+    uint64 low = (uint64) (*val);
 
     PG_RETURN_UINT64(
         hash_combine(
@@ -192,12 +190,13 @@ DEFINE_UINT16_SELF_BITWISE_FUNC(xor, ^);
 DEFINE_UINT16_SELF_BITWISE_FUNC(and, &);
 DEFINE_UINT16_SELF_BITWISE_FUNC(or, |);
 
-Datum uint16_not(PG_FUNCTION_ARGS) {
+Datum uint16_not(PG_FUNCTION_ARGS)
+{
     uint128 *a = PG_GETARG_Uint128_P(0);
     uint128 *result;
 
     result = (uint128 *) palloc(sizeof(uint128));
-    *result = ~(*a);  // Bitwise NOT
+    *result = ~(*a); // Bitwise NOT
 
     PG_RETURN_Uint128_P(result);
 }
@@ -228,9 +227,9 @@ DEFINE_UINT16_TO_INT_FUNC(uint8, uint64, UINT64_MAX, PG_RETURN_UINT64);
 Datum uint16_from_uuid(PG_FUNCTION_ARGS)
 {
     pg_uuid_t *uuid = PG_GETARG_UUID_P(0);
-    uint128 *result = (uint128 *)palloc(sizeof(uint128));
+    uint128 *result = (uint128 *) palloc(sizeof(uint128));
 
-    *result = be128toh(*(uint128*)(uuid->data));
+    *result = be128toh(*(uint128 *) (uuid->data));
 
     PG_RETURN_Uint128_P(result);
 }
@@ -238,9 +237,9 @@ Datum uint16_from_uuid(PG_FUNCTION_ARGS)
 Datum uint16_to_uuid(PG_FUNCTION_ARGS)
 {
     uint128 *uint_value = PG_GETARG_Uint128_P(0);
-    pg_uuid_t *uuid = (pg_uuid_t *)palloc(sizeof(pg_uuid_t));
+    pg_uuid_t *uuid = (pg_uuid_t *) palloc(sizeof(pg_uuid_t));
 
-    *(uint128*)(uuid->data) = htobe128(*uint_value);
-    
+    *(uint128 *) (uuid->data) = htobe128(*uint_value);
+
     PG_RETURN_UUID_P(uuid);
 }
