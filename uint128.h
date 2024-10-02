@@ -1,3 +1,6 @@
+#ifndef UINT128_H
+#define UINT128_H
+
 #include "postgres.h"
 #include "fmgr.h"
 
@@ -6,8 +9,8 @@
 #define DEFINE_UINT16_SELF_OVERFLOW_ARITHMETIC_FUNC(opname, overflow_fn) \
     PG_FUNCTION_INFO_V1(uint16_##opname); \
     Datum uint16_##opname(PG_FUNCTION_ARGS) { \
-        uint128 *a = PG_GETARG_Uint128_P(0); \
-        uint128 *b = PG_GETARG_Uint128_P(1); \
+        uint128 *a = PG_GETARG_UINT128_P(0); \
+        uint128 *b = PG_GETARG_UINT128_P(1); \
         uint128 result; \
         uint128 *resultP; \
         \
@@ -16,14 +19,14 @@
         } \
         resultP = AllocUint128(); \
         *resultP = result; \
-        PG_RETURN_Uint128_P(resultP); \
+        PG_RETURN_UINT128_P(resultP); \
     }
 
 #define DEFINE_UINT16_SELF_DIV_ARITHMETIC_FUNC(opname, operator) \
     PG_FUNCTION_INFO_V1(uint16_##opname); \
     Datum uint16_##opname(PG_FUNCTION_ARGS) { \
-        uint128 *a = PG_GETARG_Uint128_P(0); \
-        uint128 *b = PG_GETARG_Uint128_P(1); \
+        uint128 *a = PG_GETARG_UINT128_P(0); \
+        uint128 *b = PG_GETARG_UINT128_P(1); \
         uint128 *result = NULL; \
         \
         if (*b == 0) { \
@@ -32,35 +35,35 @@
         \
         result = AllocUint128(); \
         *result = *a operator *b; \
-        PG_RETURN_Uint128_P(result); \
+        PG_RETURN_UINT128_P(result); \
     }
 
 #define DEFINE_UINT16_SELF_COMPARISON_FUNC(opname, operator) \
     PG_FUNCTION_INFO_V1(uint16_##opname); \
     Datum uint16_##opname(PG_FUNCTION_ARGS) { \
-        uint128 *a = PG_GETARG_Uint128_P(0); \
-        uint128 *b = PG_GETARG_Uint128_P(1); \
+        uint128 *a = PG_GETARG_UINT128_P(0); \
+        uint128 *b = PG_GETARG_UINT128_P(1); \
         PG_RETURN_BOOL(*a operator *b); \
     }
 
 #define DEFINE_UINT16_SELF_BITWISE_FUNC(opname, operator) \
     PG_FUNCTION_INFO_V1(uint16_##opname); \
     Datum uint16_##opname(PG_FUNCTION_ARGS) { \
-        uint128 *a = PG_GETARG_Uint128_P(0); \
-        uint128 *b = PG_GETARG_Uint128_P(1); \
+        uint128 *a = PG_GETARG_UINT128_P(0); \
+        uint128 *b = PG_GETARG_UINT128_P(1); \
         uint128 *result = AllocUint128(); \
         *result = *a operator *b; \
-        PG_RETURN_Uint128_P(result); \
+        PG_RETURN_UINT128_P(result); \
     }
 
 #define DEFINE_UINT16_SELF_BITWISE_SHIFT_FUNC(opname, operator) \
     PG_FUNCTION_INFO_V1(uint16_##opname); \
     Datum uint16_##opname(PG_FUNCTION_ARGS) { \
-        uint128 *a = PG_GETARG_Uint128_P(0); \
+        uint128 *a = PG_GETARG_UINT128_P(0); \
         int32 shift = PG_GETARG_INT32(1); \
         uint128 *result = AllocUint128(); \
         *result = *a operator shift; \
-        PG_RETURN_Uint128_P(result); \
+        PG_RETURN_UINT128_P(result); \
     }
 
 #define DEFINE_UINT16_FROM_INT_FUNC(pgtype, ctype, pg_getarg_macro) \
@@ -69,13 +72,13 @@
         ctype a = pg_getarg_macro(0); \
         uint128 *result = AllocUint128(); \
         *result = (uint128)a;  /* Convert to uint128 */ \
-        PG_RETURN_Uint128_P(result); \
+        PG_RETURN_UINT128_P(result); \
     }
 
 #define DEFINE_UINT16_TO_INT_FUNC(pgtype, ctype, max_value, pg_return_macro) \
     PG_FUNCTION_INFO_V1(uint16_to_##pgtype); \
     Datum uint16_to_##pgtype(PG_FUNCTION_ARGS) { \
-        uint128 *a = PG_GETARG_Uint128_P(0); \
+        uint128 *a = PG_GETARG_UINT128_P(0); \
         ctype result; \
         \
         /* Check for overflow */ \
@@ -92,7 +95,7 @@
 #define DEFINE_UINT16_CMP_INT_FUNC(pgtype, ctype, pg_getarg_macro, opname, operator) \
     PG_FUNCTION_INFO_V1(uint16_##opname##_##pgtype); \
     Datum uint16_##opname##_##pgtype(PG_FUNCTION_ARGS) { \
-        uint128 *a = PG_GETARG_Uint128_P(0); \
+        uint128 *a = PG_GETARG_UINT128_P(0); \
         ctype    b = pg_getarg_macro(1); \
         \
         PG_RETURN_BOOL(*a operator b); \
@@ -107,7 +110,7 @@
 #define DEFINE_UINT16_INT_OVERFLOW_ARITHMETIC_FUNC(pgtype, ctype, pg_getarg_macro, opname, overflow_fn) \
     PG_FUNCTION_INFO_V1(uint16_##opname##_##pgtype); \
     Datum uint16_##opname##_##pgtype(PG_FUNCTION_ARGS) { \
-        uint128 *a = PG_GETARG_Uint128_P(0); \
+        uint128 *a = PG_GETARG_UINT128_P(0); \
         ctype bRaw = pg_getarg_macro(1); \
         uint128 b = (uint128)bRaw; \
         uint128 result; \
@@ -118,7 +121,7 @@
         } \
         resultP = AllocUint128(); \
         *resultP = result; \
-        PG_RETURN_Uint128_P(resultP); \
+        PG_RETURN_UINT128_P(resultP); \
     }
 
 #define DEFINE_UINT16_INT_OVERFLOW_ARITHMETIC_FUNCS(opname, overflow_fn) \
@@ -130,7 +133,7 @@
 #define DEFINE_UINT16_INT_DIV_ARITHMETIC_FUNC(pgtype, ctype, pg_getarg_macro, opname, operator) \
     PG_FUNCTION_INFO_V1(uint16_##opname##_##pgtype); \
     Datum uint16_##opname##_##pgtype(PG_FUNCTION_ARGS) { \
-        uint128 *a = PG_GETARG_Uint128_P(0); \
+        uint128 *a = PG_GETARG_UINT128_P(0); \
         ctype    b = pg_getarg_macro(1); \
         uint128 *result = NULL; \
         \
@@ -140,7 +143,7 @@
         \
         result = AllocUint128(); \
         *result = *a operator ((uint128)b); \
-        PG_RETURN_Uint128_P(result); \
+        PG_RETURN_UINT128_P(result); \
     }
 
 #define DEFINE_UINT16_INT_DIV_ARITHMETIC_FUNCS(opname, operator) \
@@ -152,11 +155,11 @@
 #define DEFINE_UINT16_INT_BITWISE_FUNC(pgtype, ctype, pg_getarg_macro, opname, operator) \
     PG_FUNCTION_INFO_V1(uint16_##opname##_##pgtype); \
     Datum uint16_##opname##_##pgtype(PG_FUNCTION_ARGS) { \
-        uint128 *a = PG_GETARG_Uint128_P(0); \
+        uint128 *a = PG_GETARG_UINT128_P(0); \
         ctype    b = pg_getarg_macro(1); \
         uint128 *result = AllocUint128(); \
         *result = *a operator ((uint128)b); \
-        PG_RETURN_Uint128_P(result); \
+        PG_RETURN_UINT128_P(result); \
     }
 
 #define DEFINE_UINT16_INT_BITWISE_FUNCS(opname, operator) \
@@ -172,3 +175,5 @@ static int uint128_internal_cmp(const uint128 *arg1, const uint128 *arg2)
 
     return 0; // arg1 is equal to arg2
 }
+
+#endif

@@ -1,3 +1,6 @@
+#ifndef UINT_UTILS_H
+#define UINT_UTILS_H
+
 #include "postgres.h"
 #include <access/hash.h>
 #include <stdint.h>
@@ -7,9 +10,9 @@
 #define UINT128_MAX ((2 * (unsigned __int128) INT128_MAX) + 1)
 
 #define Uint128PGetDatum(X)		    PointerGetDatum(X)
-#define PG_RETURN_Uint128_P(X)		return Uint128PGetDatum(X)
+#define PG_RETURN_UINT128_P(X)		return Uint128PGetDatum(X)
 #define DatumGetUint128P(X)		    ((uint128 *) DatumGetPointer(X))
-#define PG_GETARG_Uint128_P(X)		DatumGetUint128P(PG_GETARG_DATUM(X))
+#define PG_GETARG_UINT128_P(X)		DatumGetUint128P(PG_GETARG_DATUM(X))
 
 #ifndef PG_GETARG_UINT64
 #define PG_GETARG_UINT64(n)  DatumGetUInt64(PG_GETARG_DATUM(n))
@@ -213,3 +216,5 @@ static inline bool mul_u64_overflow(uint64 a, uint64 b, uint64 *result)
     *result = a * b;
     return false; // No overflow
 }
+
+#endif

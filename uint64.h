@@ -1,3 +1,6 @@
+#ifndef UINT64_H
+#define UINT64_H
+
 #include "postgres.h"
 #include "fmgr.h"
 
@@ -88,7 +91,7 @@
     DEFINE_UINT8_CMP_INT_FUNC(int2, int16, PG_GETARG_INT16, opname, operator); \
     DEFINE_UINT8_CMP_INT_FUNC(int4, int32, PG_GETARG_INT32, opname, operator); \
     DEFINE_UINT8_CMP_INT_FUNC(int8, int64, PG_GETARG_INT64, opname, operator); \
-    DEFINE_UINT8_CMP_INT_FUNC(uint16, uint128, *PG_GETARG_Uint128_P, opname, operator);
+    DEFINE_UINT8_CMP_INT_FUNC(uint16, uint128, *PG_GETARG_UINT128_P, opname, operator);
 
 #define DEFINE_UINT8_INT_OVERFLOW_ARITHMETIC_FUNC(pgtype, ctype, pg_getarg_macro, opname, overflow_fn) \
     PG_FUNCTION_INFO_V1(uint8_##opname##_##pgtype); \
@@ -108,7 +111,7 @@
     DEFINE_UINT8_INT_OVERFLOW_ARITHMETIC_FUNC(int2, int16, PG_GETARG_INT16, opname, overflow_fn); \
     DEFINE_UINT8_INT_OVERFLOW_ARITHMETIC_FUNC(int4, int32, PG_GETARG_INT32, opname, overflow_fn); \
     DEFINE_UINT8_INT_OVERFLOW_ARITHMETIC_FUNC(int8, int64, PG_GETARG_INT64, opname, overflow_fn); \
-    DEFINE_UINT8_INT_OVERFLOW_ARITHMETIC_FUNC(uint16, uint128, *PG_GETARG_Uint128_P, opname, overflow_fn);
+    DEFINE_UINT8_INT_OVERFLOW_ARITHMETIC_FUNC(uint16, uint128, *PG_GETARG_UINT128_P, opname, overflow_fn);
 
 #define DEFINE_UINT8_INT_DIV_ARITHMETIC_FUNC(pgtype, ctype, pg_getarg_macro, opname, operator) \
     PG_FUNCTION_INFO_V1(uint8_##opname##_##pgtype); \
@@ -127,7 +130,7 @@
     DEFINE_UINT8_INT_DIV_ARITHMETIC_FUNC(int2, int16, PG_GETARG_INT16, opname, operator); \
     DEFINE_UINT8_INT_DIV_ARITHMETIC_FUNC(int4, int32, PG_GETARG_INT32, opname, operator); \
     DEFINE_UINT8_INT_DIV_ARITHMETIC_FUNC(int8, int64, PG_GETARG_INT64, opname, operator); \
-    DEFINE_UINT8_INT_DIV_ARITHMETIC_FUNC(uint16, uint128, *PG_GETARG_Uint128_P, opname, operator);
+    DEFINE_UINT8_INT_DIV_ARITHMETIC_FUNC(uint16, uint128, *PG_GETARG_UINT128_P, opname, operator);
 
 #define DEFINE_UINT8_INT_BITWISE_FUNC(pgtype, ctype, pg_getarg_macro, opname, operator) \
     PG_FUNCTION_INFO_V1(uint8_##opname##_##pgtype); \
@@ -141,7 +144,7 @@
     DEFINE_UINT8_INT_BITWISE_FUNC(int2, int16, PG_GETARG_INT16, opname, operator); \
     DEFINE_UINT8_INT_BITWISE_FUNC(int4, int32, PG_GETARG_INT32, opname, operator); \
     DEFINE_UINT8_INT_BITWISE_FUNC(int8, int64, PG_GETARG_INT64, opname, operator); \
-    DEFINE_UINT8_INT_BITWISE_FUNC(uint16, uint128, *PG_GETARG_Uint128_P, opname, operator);
+    DEFINE_UINT8_INT_BITWISE_FUNC(uint16, uint128, *PG_GETARG_UINT128_P, opname, operator);
 
 static int uint64_internal_cmp(const uint64 arg1, const uint64 arg2)
 {
@@ -150,3 +153,5 @@ static int uint64_internal_cmp(const uint64 arg1, const uint64 arg2)
 
     return 0; // arg1 is equal to arg2
 }
+
+#endif

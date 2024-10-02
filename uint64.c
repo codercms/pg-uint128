@@ -8,10 +8,6 @@
 #include "uint_utils.h"
 #include "uint64.h"
 
-#ifdef PG_MODULE_MAGIC
-PG_MODULE_MAGIC;
-#endif
-
 PG_FUNCTION_INFO_V1(uint8_in);
 PG_FUNCTION_INFO_V1(uint8_out);
 PG_FUNCTION_INFO_V1(uint8_send);
@@ -200,7 +196,7 @@ DEFINE_UINT8_TO_INT_FUNC(int8, int64, INT64_MAX, PG_RETURN_INT64);
 
 Datum uint8_from_uint16(PG_FUNCTION_ARGS)
 {
-    uint128 *a = PG_GETARG_Uint128_P(0);
+    uint128 *a = PG_GETARG_UINT128_P(0);
     uint64 result;
 
     if (*a > UINT64_MAX) {
@@ -225,5 +221,5 @@ Datum uint8_to_uint16(PG_FUNCTION_ARGS)
 
     *result = (uint128) a; // Safe to cast
 
-    PG_RETURN_Uint128_P(result);
+    PG_RETURN_UINT128_P(result);
 }

@@ -61,12 +61,12 @@ Datum uint16_in(PG_FUNCTION_ARGS)
 
     // elog(INFO, "uint16in high %llu low %llu", (uint64)((*num) >> 64), (uint64)low_part);
 
-    PG_RETURN_Uint128_P(num);
+    PG_RETURN_UINT128_P(num);
 }
 
 Datum uint16_out(PG_FUNCTION_ARGS)
 {
-    uint128 *num = PG_GETARG_Uint128_P(0);
+    uint128 *num = PG_GETARG_UINT128_P(0);
     char *buf;
     char *bufPtr;
     char *str;
@@ -112,7 +112,7 @@ Datum uint16_recv(PG_FUNCTION_ARGS)
     // Combine the two 64-bit parts into a 128-bit value
     *result = ((uint128) high_part << 64) | (uint128) low_part;
 
-    PG_RETURN_Uint128_P(result);
+    PG_RETURN_UINT128_P(result);
 }
 
 /*
@@ -121,7 +121,7 @@ Datum uint16_recv(PG_FUNCTION_ARGS)
 Datum uint16_send(PG_FUNCTION_ARGS)
 {
     StringInfoData buf;
-    uint128 *arg1 = PG_GETARG_Uint128_P(0);
+    uint128 *arg1 = PG_GETARG_UINT128_P(0);
 
     pq_begintypsend(&buf);
     pq_sendint64(&buf, (uint64) ((*arg1) >> 64)); // Extract the high 64 bits
@@ -148,8 +148,8 @@ DEFINE_UINT16_CMP_INT_FUNCS(ge, >=);
 /* handler for btree index operator */
 Datum uint16_cmp(PG_FUNCTION_ARGS)
 {
-    uint128 *arg1 = PG_GETARG_Uint128_P(0);
-    uint128 *arg2 = PG_GETARG_Uint128_P(1);
+    uint128 *arg1 = PG_GETARG_UINT128_P(0);
+    uint128 *arg2 = PG_GETARG_UINT128_P(1);
 
     PG_RETURN_INT32(uint128_internal_cmp(arg1, arg2));
 }
@@ -158,7 +158,7 @@ Datum uint16_cmp(PG_FUNCTION_ARGS)
 
 Datum uint16_hash(PG_FUNCTION_ARGS)
 {
-    uint128 *val = PG_GETARG_Uint128_P(0);
+    uint128 *val = PG_GETARG_UINT128_P(0);
     uint64 high = (uint64) (*val >> 64);
     uint64 low = (uint64) (*val);
 
@@ -192,13 +192,13 @@ DEFINE_UINT16_SELF_BITWISE_FUNC(or, |);
 
 Datum uint16_not(PG_FUNCTION_ARGS)
 {
-    uint128 *a = PG_GETARG_Uint128_P(0);
+    uint128 *a = PG_GETARG_UINT128_P(0);
     uint128 *result;
 
     result = (uint128 *) palloc(sizeof(uint128));
     *result = ~(*a); // Bitwise NOT
 
-    PG_RETURN_Uint128_P(result);
+    PG_RETURN_UINT128_P(result);
 }
 
 DEFINE_UINT16_SELF_BITWISE_SHIFT_FUNC(shl, <<);
@@ -231,12 +231,12 @@ Datum uint16_from_uuid(PG_FUNCTION_ARGS)
 
     *result = be128toh(*(uint128 *) (uuid->data));
 
-    PG_RETURN_Uint128_P(result);
+    PG_RETURN_UINT128_P(result);
 }
 
 Datum uint16_to_uuid(PG_FUNCTION_ARGS)
 {
-    uint128 *uint_value = PG_GETARG_Uint128_P(0);
+    uint128 *uint_value = PG_GETARG_UINT128_P(0);
     pg_uuid_t *uuid = (pg_uuid_t *) palloc(sizeof(pg_uuid_t));
 
     *(uint128 *) (uuid->data) = htobe128(*uint_value);
