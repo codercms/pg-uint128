@@ -15,6 +15,16 @@ const CROSS_TYPES = [
     'uint16' => ['uint8'],
 ];
 
+const MAX_VALUES = [
+    'int2' => '32767',
+    'int4' => '2147483647',
+    'int8' => '9223372036854775807',
+    'int16' => '170141183460469231731687303715884105727',
+
+    'uint8' => '18446744073709551615',
+    'uint16' => '340282366920938463463374607431768211455',
+];
+
 class OpConfig
 {
     public function __construct(
@@ -102,6 +112,22 @@ enum Op: string
     {
         return match ($this) {
             self::Eq, self::Ne, self::Gt, self::Lt, self::Ge, self::Le => true,
+            default => false,
+        };
+    }
+
+    public function canOverflow(): bool
+    {
+        return match ($this) {
+            self::Add, self::Sub, self::Mul => true,
+            default => false,
+        };
+    }
+
+    public function isDivision(): bool
+    {
+        return match ($this) {
+            self::Div, self::Mod => true,
             default => false,
         };
     }
@@ -222,6 +248,7 @@ class TypeOpConfig
     public function __construct(
         public readonly Op $op,
         public readonly array $types = [],
+        public readonly bool $inverseTypes = false,
     ) {
     }
 
@@ -230,18 +257,18 @@ class TypeOpConfig
         $cmpFunc = function () use ($extName, $parent, $crossTypesOnly): string {
             $op = $this->op;
 
+            $sql = "";
+
             if (!$crossTypesOnly) {
-                $sql = <<<EOT
-CREATE FUNCTION {$parent->name}_{$op->value}({$parent->name}, {$parent->name}) RETURNS boolean
+                $sql .= <<<EOT
+CREATE FUNCTION {$parent->name}_{$op->value}_{$parent->name}({$parent->name}, {$parent->name}) RETURNS boolean
     IMMUTABLE
     STRICT
     LANGUAGE C
-    AS '\$libdir/{$extName}', '{$parent->name}_{$op->value}';
+    AS '\$libdir/{$extName}', '{$parent->name}_{$op->value}_{$parent->name}';
 
 
 EOT;
-            } else {
-                $sql = '';
             }
 
             foreach ($this->types as $EXT_TYPE) {
@@ -254,6 +281,18 @@ CREATE FUNCTION {$parent->name}_{$op->value}_{$EXT_TYPE}({$parent->name}, {$EXT_
 
 
 EOT;
+
+                if ($this->inverseTypes) {
+                    $sql .= <<<EOT
+CREATE FUNCTION {$EXT_TYPE}_{$op->value}_{$parent->name}({$EXT_TYPE}, {$parent->name}) RETURNS boolean
+    IMMUTABLE
+    STRICT
+    LANGUAGE C
+    AS '\$libdir/{$extName}', '{$EXT_TYPE}_{$op->value}_{$parent->name}';
+
+
+EOT;
+                }
             }
 
             return $sql;
@@ -262,18 +301,18 @@ EOT;
         $arithmFunc = function () use ($extName, $parent, $crossTypesOnly): string {
             $op = $this->op;
 
+            $sql = '';
+
             if (!$crossTypesOnly) {
-                $sql = <<<EOT
-CREATE FUNCTION {$parent->name}_{$op->value}({$parent->name}, {$parent->name}) RETURNS {$parent->name}
+                $sql .= <<<EOT
+CREATE FUNCTION {$parent->name}_{$op->value}_{$parent->name}({$parent->name}, {$parent->name}) RETURNS {$parent->name}
     IMMUTABLE
     STRICT
     LANGUAGE C
-    AS '\$libdir/{$extName}', '{$parent->name}_{$op->value}';
+    AS '\$libdir/{$extName}', '{$parent->name}_{$op->value}_{$parent->name}';
 
 
 EOT;
-            } else {
-                $sql = '';
             }
 
             foreach ($this->types as $EXT_TYPE) {
@@ -286,6 +325,18 @@ CREATE FUNCTION {$parent->name}_{$op->value}_{$EXT_TYPE}({$parent->name}, {$EXT_
 
 
 EOT;
+
+                if ($this->inverseTypes) {
+                    $sql .= <<<EOT
+CREATE FUNCTION {$EXT_TYPE}_{$op->value}_{$parent->name}({$EXT_TYPE}, {$parent->name}) RETURNS {$EXT_TYPE}
+    IMMUTABLE
+    STRICT
+    LANGUAGE C
+    AS '\$libdir/{$extName}', '{$EXT_TYPE}_{$op->value}_{$parent->name}';
+
+
+EOT;
+                }
             }
 
             return $sql;
@@ -294,18 +345,18 @@ EOT;
         $bitwiseFunc = function () use ($extName, $parent, $crossTypesOnly): string {
             $op = $this->op;
 
+            $sql = '';
+
             if (!$crossTypesOnly) {
-                $sql = <<<EOT
-CREATE FUNCTION {$parent->name}_{$op->value}({$parent->name}, {$parent->name}) RETURNS {$parent->name}
+                $sql .= <<<EOT
+CREATE FUNCTION {$parent->name}_{$op->value}_{$parent->name}({$parent->name}, {$parent->name}) RETURNS {$parent->name}
     IMMUTABLE
     STRICT
     LANGUAGE C
-    AS '\$libdir/{$extName}', '{$parent->name}_{$op->value}';
+    AS '\$libdir/{$extName}', '{$parent->name}_{$op->value}_{$parent->name}';
 
 
 EOT;
-            } else {
-                $sql = '';
             }
 
             foreach ($this->types as $EXT_TYPE) {
@@ -318,6 +369,17 @@ CREATE FUNCTION {$parent->name}_{$op->value}_{$EXT_TYPE}({$parent->name}, {$EXT_
 
 
 EOT;
+                if ($this->inverseTypes) {
+                    $sql .= <<<EOT
+CREATE FUNCTION {$EXT_TYPE}_{$op->value}_{$parent->name}({$EXT_TYPE}, {$parent->name}) RETURNS {$EXT_TYPE}
+    IMMUTABLE
+    STRICT
+    LANGUAGE C
+    AS '\$libdir/{$extName}', '{$EXT_TYPE}_{$op->value}_{$parent->name}';
+
+
+EOT;
+                }
             }
 
             return $sql;
@@ -325,9 +387,10 @@ EOT;
 
         $bitwiseShiftFunc = function () use ($extName, $parent, $crossTypesOnly): string {
             $op = $this->op;
+            $sql = '';
 
             if (!$crossTypesOnly) {
-                $sql = <<<EOT
+                $sql .= <<<EOT
 CREATE FUNCTION {$parent->name}_{$op->value}({$parent->name}, int4) RETURNS {$parent->name}
     IMMUTABLE
     STRICT
@@ -336,8 +399,6 @@ CREATE FUNCTION {$parent->name}_{$op->value}({$parent->name}, int4) RETURNS {$pa
 
 
 EOT;
-            } else {
-                $sql = '';
             }
 
             return $sql;
@@ -374,14 +435,18 @@ EOT;
             $op = $this->op;
             $cfg = $op->config();
 
+            $sql = '';
+
             if (!$crossTypesOnly) {
-                $sql = $cfg->toSQL("{$parent->name}_{$op->value}", $parent->name, $parent->name) . "\n";
-            } else {
-                $sql = '';
+                $sql .= $cfg->toSQL("{$parent->name}_{$op->value}_{$parent->name}", $parent->name, $parent->name) . "\n";
             }
 
             foreach ($this->types as $EXT_TYPE) {
                 $sql .= $cfg->toSQL("{$parent->name}_{$op->value}_{$EXT_TYPE}", $parent->name, $EXT_TYPE) . "\n";
+
+                if ($this->inverseTypes) {
+                    $sql .= $cfg->toSQL("{$EXT_TYPE}_{$op->value}_{$parent->name}", $EXT_TYPE, $parent->name) . "\n";
+                }
             }
 
             return $sql;
@@ -391,14 +456,18 @@ EOT;
             $op = $this->op;
             $cfg = $op->config();
 
+            $sql = '';
+
             if (!$crossTypesOnly) {
-                $sql = $cfg->toSQL("{$parent->name}_{$op->value}", $parent->name, $parent->name) . "\n";
-            } else {
-                $sql = '';
+                $sql = $cfg->toSQL("{$parent->name}_{$op->value}_{$parent->name}", $parent->name, $parent->name) . "\n";
             }
 
             foreach ($this->types as $EXT_TYPE) {
                 $sql .= $cfg->toSQL("{$parent->name}_{$op->value}_{$EXT_TYPE}", $parent->name, $EXT_TYPE) . "\n";
+
+                if ($this->inverseTypes) {
+                    $sql .= $cfg->toSQL("{$EXT_TYPE}_{$op->value}_{$parent->name}", $EXT_TYPE, $parent->name) . "\n";
+                }
             }
 
             return $sql;
@@ -408,14 +477,18 @@ EOT;
             $op = $this->op;
             $cfg = $op->config();
 
+            $sql = '';
+
             if (!$crossTypesOnly) {
-                $sql = $cfg->toSQL("{$parent->name}_{$op->value}", $parent->name, $parent->name) . "\n";
-            } else {
-                $sql = '';
+                $sql = $cfg->toSQL("{$parent->name}_{$op->value}_{$parent->name}", $parent->name, $parent->name) . "\n";
             }
 
             foreach ($this->types as $EXT_TYPE) {
                 $sql .= $cfg->toSQL("{$parent->name}_{$op->value}_{$EXT_TYPE}", $parent->name, $EXT_TYPE) . "\n";
+
+                if ($this->inverseTypes) {
+                    $sql .= $cfg->toSQL("{$EXT_TYPE}_{$op->value}_{$parent->name}", $EXT_TYPE, $parent->name) . "\n";
+                }
             }
 
             return $sql;
@@ -451,6 +524,153 @@ EOT;
         };
 
         return $sql;
+    }
+
+    /**
+     * @return array{0: string, 1: string}
+     */
+    public function getSQLTest(TypeConfig $parent, bool $crossTypesOnly): array
+    {
+        $cmpFunc = function () use ($parent, $crossTypesOnly): array {
+            $cfg = $this->op->config();
+
+            $sql = '';
+            $expected = '';
+
+            $expectedVal = match ($this->op) {
+                Op::Eq, Op::Gt, Op::Ge => 'f',
+                Op::Ne, Op::Lt, Op::Le => 't',
+            };
+
+            if (!$crossTypesOnly) {
+                $sql .= "SELECT 120::{$parent->name} {$cfg->sign} 121::{$parent->name};\n";
+
+                $expected .= <<<EOT
+SELECT 120::{$parent->name} {$cfg->sign} 121::{$parent->name};
+ ?column?
+----------
+ {$expectedVal}
+(1 row)
+EOT;
+
+                $expected .= "\n\n";
+            }
+
+            foreach ($this->types as $EXT_TYPE) {
+                $sql .= "SELECT 120::{$parent->name} {$cfg->sign} 121::{$EXT_TYPE};\n";
+
+                $expected .= <<<EOT
+SELECT 120::{$parent->name} {$cfg->sign} 121::{$EXT_TYPE};
+ ?column?
+----------
+ {$expectedVal}
+(1 row)
+EOT;
+                $expected .= "\n\n";
+            }
+
+            if ($sql !== '') {
+                $sql .= "\n";
+            }
+
+            return [$sql, $expected];
+        };
+
+        $arithmFunc = function () use ($parent, $crossTypesOnly): array {
+            $cfg = $this->op->config();
+
+            $sql = '';
+            $expected = '';
+
+            if (!$crossTypesOnly) {
+                $q = "SELECT 120::{$parent->name} {$cfg->sign} 10::{$parent->name};\n";
+
+                $sql .= $q;
+                $expected .= $q;
+
+                $expectedVal = match ($this->op) {
+                    Op::Add => '130',
+                    Op::Sub => '110',
+                    Op::Mul => '1200',
+                    Op::Div => '12',
+                    Op::Mod  => '0'
+                };
+
+                $expected .= <<<EOT
+ ?column?
+----------
+ {$expectedVal}
+(1 row)
+EOT;
+
+                $expected .= "\n\n";
+
+                if ($this->op->canOverflow()) {
+                    if ($this->op === Op::Sub) {
+                        $q = "SELECT 0::{$parent->name} {$cfg->sign} 1::{$parent->name};\n";
+                        $sql .= $q;
+                        $expected .= $q;
+                        $expected .= "ERROR:  {$parent->name} out of range\n";
+                    } else {
+                        $leftMaxValue = MAX_VALUES[$parent->name];
+                        $sql .= "SELECT 1::{$parent->name} {$cfg->sign} {$leftMaxValue}::{$parent->name};\n";
+                        $sql .= "SELECT {$leftMaxValue}::{$parent->name} {$cfg->sign} 1::{$parent->name};\n";
+                    }
+                }
+
+                if ($this->op->isDivision()) {
+                    $sql .= "SELECT 1::{$parent->name} {$cfg->sign} 0::{$parent->name};\n";
+                }
+            }
+
+            foreach ($this->types as $EXT_TYPE) {
+                $sql .= "SELECT 1::{$parent->name} {$cfg->sign} 2::{$EXT_TYPE};\n";
+            }
+
+            foreach ($this->types as $EXT_TYPE) {
+                if ($this->op->canOverflow()) {
+                    $parTypeMaxVal = MAX_VALUES[$parent->name];
+                    $extTypeMaxVal = MAX_VALUES[$EXT_TYPE];
+
+                    [$leftArg, $rightArg] = match ($this->op) {
+                        Op::Add => [$parTypeMaxVal, '1'],
+                        Op::Sub => ['0', '1'],
+                        Op::Mul => [$parTypeMaxVal, '2'],
+                    };
+
+                    $sql .= "SELECT {$leftArg}::{$parent->name} {$cfg->sign} {$rightArg}::{$EXT_TYPE};\n";
+
+                    [$leftArg, $rightArg] = match ($this->op) {
+                        Op::Add => [$extTypeMaxVal, '1'],
+                        Op::Sub => ['0', '1'],
+                        Op::Mul => [$extTypeMaxVal, '2'],
+                    };
+
+                    $sql .= "SELECT {$leftArg}::{$EXT_TYPE} {$cfg->sign} {$rightArg}::{$parent->name};\n";
+                }
+
+                if ($this->op->isDivision()) {
+                    $sql .= "SELECT 1::{$parent->name} {$cfg->sign} 0::{$EXT_TYPE};\n";
+                }
+            }
+
+            if ($sql !== '') {
+                $sql .= "\n";
+            }
+
+            return [$sql, $expected];
+        };
+
+        [$sql, $expected] = match ($this->op) {
+            Op::Eq, Op::Ne, Op::Gt, Op::Lt, Op::Ge, Op::Le => $cmpFunc(),
+            Op::Add, Op::Sub, Op::Mul, Op::Div, Op::Mod => $arithmFunc(),
+            default => '',
+//            Op::Xor, Op::And, Op::Or => $bitwiseFunc(),
+//            Op::Shl, Op::Shr => $bitwiseShiftFunc(),
+//            Op::Not => $notFunc(),
+        };
+
+        return [$sql, $expected];
     }
 }
 
@@ -504,7 +724,7 @@ CREATE FUNCTION {$this->name}_send({$this->name}) RETURNS bytea
     STRICT
     LANGUAGE C
     AS '\$libdir/{$extName}', '{$this->name}_send';
-    
+
 CREATE TYPE {$this->name} (
     INPUT = {$this->name}_in,
     OUTPUT = {$this->name}_out,
@@ -602,6 +822,26 @@ EOT;
 
         return $sql;
     }
+
+    /**
+     * @return array{0: string, 1: string}
+     */
+    public function toSQLTests(): array
+    {
+        $sql = "-- Testing {$this->name}\n\n";
+        $expected = "-- Testing {$this->name}\n";
+
+        $sql .= "-- Ops block\n\n";
+        $expected .= "-- Ops block\n";
+
+        foreach ($this->ops as $op) {
+            [$tSql, $tExpected] = $op->getSQLTest($this, $this->crossTypesOnly);
+            $sql .= $tSql;
+            $expected .= $tExpected;
+        }
+
+        return [$sql, $expected];
+    }
 }
 
 /** @var array<TypeConfig> $types */
@@ -640,22 +880,22 @@ $types = [
         size: 8,
         passByValue: true,
         ops: [
-            new TypeOpConfig(Op::Eq, types: INT_TYPES),
-            new TypeOpConfig(Op::Ne, types: INT_TYPES),
-            new TypeOpConfig(Op::Gt, types: INT_TYPES),
-            new TypeOpConfig(Op::Lt, types: INT_TYPES),
-            new TypeOpConfig(Op::Ge, types: INT_TYPES),
-            new TypeOpConfig(Op::Le, types: INT_TYPES),
+            new TypeOpConfig(Op::Eq, types: INT_TYPES, inverseTypes: true),
+            new TypeOpConfig(Op::Ne, types: INT_TYPES, inverseTypes: true),
+            new TypeOpConfig(Op::Gt, types: INT_TYPES, inverseTypes: true),
+            new TypeOpConfig(Op::Lt, types: INT_TYPES, inverseTypes: true),
+            new TypeOpConfig(Op::Ge, types: INT_TYPES, inverseTypes: true),
+            new TypeOpConfig(Op::Le, types: INT_TYPES, inverseTypes: true),
 
-            new TypeOpConfig(Op::Add, types: INT_TYPES),
-            new TypeOpConfig(Op::Sub, types: INT_TYPES),
-            new TypeOpConfig(Op::Mul, types: INT_TYPES),
-            new TypeOpConfig(Op::Div, types: INT_TYPES),
-            new TypeOpConfig(Op::Mod, types: INT_TYPES),
+            new TypeOpConfig(Op::Add, types: INT_TYPES, inverseTypes: true),
+            new TypeOpConfig(Op::Sub, types: INT_TYPES, inverseTypes: true),
+            new TypeOpConfig(Op::Mul, types: INT_TYPES, inverseTypes: true),
+            new TypeOpConfig(Op::Div, types: INT_TYPES, inverseTypes: true),
+            new TypeOpConfig(Op::Mod, types: INT_TYPES, inverseTypes: true),
 
-            new TypeOpConfig(Op::Xor, types: INT_TYPES),
-            new TypeOpConfig(Op::And, types: INT_TYPES),
-            new TypeOpConfig(Op::Or, types: INT_TYPES),
+            new TypeOpConfig(Op::Xor, types: INT_TYPES, inverseTypes: true),
+            new TypeOpConfig(Op::And, types: INT_TYPES, inverseTypes: true),
+            new TypeOpConfig(Op::Or, types: INT_TYPES, inverseTypes: true),
             new TypeOpConfig(Op::Not, types: []),
             new TypeOpConfig(Op::Shl, types: ['int4']),
             new TypeOpConfig(Op::Shr, types: ['int4']),
@@ -720,5 +960,18 @@ foreach ($types as $type) {
 }
 
 file_put_contents("uint128--1.0.0.sql", $buf);
+
+@mkdir("sql");
+@mkdir("expected");
+
+$testPrefix = "CREATE EXTENSION {$extName};\n\n";
+$expectedPrefix = "CREATE EXTENSION {$extName};\n";
+
+foreach ($types as $type) {
+    [$test, $expected] = $type->toSQLTests();
+
+    file_put_contents("sql/test_{$type->name}.sql", $testPrefix . $test);
+    file_put_contents("expected/test_{$type->name}.out", $expectedPrefix . $expected);
+}
 
 return;

@@ -7,8 +7,8 @@
 #define AllocUint128() ((uint128*)palloc(sizeof(uint128)))
 
 #define DEFINE_UINT16_SELF_OVERFLOW_ARITHMETIC_FUNC(opname, overflow_fn) \
-    PG_FUNCTION_INFO_V1(uint16_##opname); \
-    Datum uint16_##opname(PG_FUNCTION_ARGS) { \
+    PG_FUNCTION_INFO_V1(uint16_##opname##_uint16); \
+    Datum uint16_##opname##_uint16(PG_FUNCTION_ARGS) { \
         uint128 *a = PG_GETARG_UINT128_P(0); \
         uint128 *b = PG_GETARG_UINT128_P(1); \
         uint128 result; \
@@ -23,8 +23,8 @@
     }
 
 #define DEFINE_UINT16_SELF_DIV_ARITHMETIC_FUNC(opname, operator) \
-    PG_FUNCTION_INFO_V1(uint16_##opname); \
-    Datum uint16_##opname(PG_FUNCTION_ARGS) { \
+    PG_FUNCTION_INFO_V1(uint16_##opname##_uint16); \
+    Datum uint16_##opname##_uint16(PG_FUNCTION_ARGS) { \
         uint128 *a = PG_GETARG_UINT128_P(0); \
         uint128 *b = PG_GETARG_UINT128_P(1); \
         uint128 *result = NULL; \
@@ -39,16 +39,16 @@
     }
 
 #define DEFINE_UINT16_SELF_COMPARISON_FUNC(opname, operator) \
-    PG_FUNCTION_INFO_V1(uint16_##opname); \
-    Datum uint16_##opname(PG_FUNCTION_ARGS) { \
+    PG_FUNCTION_INFO_V1(uint16_##opname##_uint16); \
+    Datum uint16_##opname##_uint16(PG_FUNCTION_ARGS) { \
         uint128 *a = PG_GETARG_UINT128_P(0); \
         uint128 *b = PG_GETARG_UINT128_P(1); \
         PG_RETURN_BOOL(*a operator *b); \
     }
 
 #define DEFINE_UINT16_SELF_BITWISE_FUNC(opname, operator) \
-    PG_FUNCTION_INFO_V1(uint16_##opname); \
-    Datum uint16_##opname(PG_FUNCTION_ARGS) { \
+    PG_FUNCTION_INFO_V1(uint16_##opname##_uint16); \
+    Datum uint16_##opname##_uint16(PG_FUNCTION_ARGS) { \
         uint128 *a = PG_GETARG_UINT128_P(0); \
         uint128 *b = PG_GETARG_UINT128_P(1); \
         uint128 *result = AllocUint128(); \
