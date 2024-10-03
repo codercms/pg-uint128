@@ -226,7 +226,7 @@
     DEFINE_UINT8_SIGNED_INT_DIV_ARITHMETIC_FUNC(int4, int32, PG_GETARG_INT32, opname, operator); \
     DEFINE_UINT8_SIGNED_INT_DIV_ARITHMETIC_FUNC(int8, int64, PG_GETARG_INT64, opname, operator);
 
-#define DEFINE_SIGNED_INT_UINT8_DIV_ARITHMETIC_FUNC(pgtype, ctype, opname, pg_getarg_macro, pg_return_macro, is_mod) \
+#define DEFINE_SIGNED_INT_UINT8_DIV_ARITHMETIC_FUNC(pgtype, ctype, opname, pg_getarg_macro, pg_return_macro, max_value, is_mod) \
     PG_FUNCTION_INFO_V1(pgtype##_##opname##_uint8); \
     Datum pgtype##_##opname##_uint8(PG_FUNCTION_ARGS) { \
         ctype  a = pg_getarg_macro(0); \
@@ -235,28 +235,30 @@
         if (b == 0) { \
             DIVISION_BY_ZERO_ERR; \
         } \
+        if (b > max_value) { \
+            ereport(ERROR, \
+                    (errcode(ERRCODE_NUMERIC_VALUE_OUT_OF_RANGE), \
+                     errmsg("uint8 value exceeds " #pgtype " range"))); \
+        } \
+        \
         /* In integer division, any division where the absolute value of the numerator is less than the denominator results in 0. */ \
         /* In integer modulo, any division where the absolute value of the numerator is less than the denominator results in original value of numerator. */ \
         if (Abs(a) < b) { \
             pg_return_macro(is_mod ? a : 0); \
-        } \
-        /* Negate result */ \
-        if (a < 0) {\
-            pg_return_macro(is_mod ? -(a % (ctype)b) : -(a / (ctype)b)); \
         } \
         \
         pg_return_macro(is_mod ? a % (ctype)b : a / (ctype)b); \
     }
 
 #define DEFINE_SIGNED_INT_UINT8_DIV_ARITHMETIC_FUNCS() \
-    DEFINE_SIGNED_INT_UINT8_DIV_ARITHMETIC_FUNC(int2, int16, div, PG_GETARG_INT16, PG_RETURN_INT16, false); \
-    DEFINE_SIGNED_INT_UINT8_DIV_ARITHMETIC_FUNC(int4, int32, div, PG_GETARG_INT32, PG_RETURN_INT32, false); \
-    DEFINE_SIGNED_INT_UINT8_DIV_ARITHMETIC_FUNC(int8, int64, div, PG_GETARG_INT64, PG_RETURN_INT64, false);
+    DEFINE_SIGNED_INT_UINT8_DIV_ARITHMETIC_FUNC(int2, int16, div, PG_GETARG_INT16, PG_RETURN_INT16, INT16_MAX, false); \
+    DEFINE_SIGNED_INT_UINT8_DIV_ARITHMETIC_FUNC(int4, int32, div, PG_GETARG_INT32, PG_RETURN_INT32, INT32_MAX, false); \
+    DEFINE_SIGNED_INT_UINT8_DIV_ARITHMETIC_FUNC(int8, int64, div, PG_GETARG_INT64, PG_RETURN_INT64, INT64_MAX, false);
 
 #define DEFINE_SIGNED_INT_UINT8_MOD_ARITHMETIC_FUNCS() \
-    DEFINE_SIGNED_INT_UINT8_DIV_ARITHMETIC_FUNC(int2, int16, mod, PG_GETARG_INT16, PG_RETURN_INT16, true); \
-    DEFINE_SIGNED_INT_UINT8_DIV_ARITHMETIC_FUNC(int4, int32, mod, PG_GETARG_INT32, PG_RETURN_INT32, true); \
-    DEFINE_SIGNED_INT_UINT8_DIV_ARITHMETIC_FUNC(int8, int64, mod, PG_GETARG_INT64, PG_RETURN_INT64, true);
+    DEFINE_SIGNED_INT_UINT8_DIV_ARITHMETIC_FUNC(int2, int16, mod, PG_GETARG_INT16, PG_RETURN_INT16, INT16_MAX, true); \
+    DEFINE_SIGNED_INT_UINT8_DIV_ARITHMETIC_FUNC(int4, int32, mod, PG_GETARG_INT32, PG_RETURN_INT32, INT32_MAX, true); \
+    DEFINE_SIGNED_INT_UINT8_DIV_ARITHMETIC_FUNC(int8, int64, mod, PG_GETARG_INT64, PG_RETURN_INT64, INT64_MAX, true);
 
 
 // Bitwise funcs
