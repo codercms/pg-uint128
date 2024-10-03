@@ -7,7 +7,9 @@
 #include <libpq/pqformat.h>
 #include <stdint.h>
 #include "uint_utils.h"
+#include "int_utils.h"
 #include "uint128.h"
+#include "misc.h"
 
 PG_FUNCTION_INFO_V1(uint16_in);
 PG_FUNCTION_INFO_V1(uint16_out);
@@ -27,7 +29,7 @@ PG_FUNCTION_INFO_V1(uint16_to_uuid);
 Datum uint16_in(PG_FUNCTION_ARGS)
 {
     char *num_str = PG_GETARG_CSTRING(0);
-    uint128 *num;
+    uint128 num = 0;
 
     if (num_str == NULL)
         elog(ERROR, "NULL pointer");
@@ -44,12 +46,7 @@ Datum uint16_in(PG_FUNCTION_ARGS)
 
     // elog(INFO, "uint16in num_str: %s", num_str);
 
-    num = (uint128 *) palloc(sizeof(uint128));
-    *num = 0;
-
-    if (parse_uint128(num_str, num) != 0) {
-        pfree(num);
-
+    if (parse_uint128(num_str, &num) != 0) {
         ereport(
             ERROR,
             (
@@ -61,7 +58,7 @@ Datum uint16_in(PG_FUNCTION_ARGS)
 
     // elog(INFO, "uint16in high %llu low %llu", (uint64)((*num) >> 64), (uint64)low_part);
 
-    PG_RETURN_UINT128_P(num);
+    PG_RETURN_UINT128(num);
 }
 
 Datum uint16_out(PG_FUNCTION_ARGS)
@@ -79,6 +76,11 @@ Datum uint16_out(PG_FUNCTION_ARGS)
     buf = (char *) palloc(41);
 
     bufPtr = uint128_to_string_v2(*num, buf, 41);
+    if (bufPtr == NULL) {
+        pfree(buf);
+
+        elog(ERROR, "Cannot convert uint16 to string");
+    }
 
     // elog(INFO, "uint16out buf (%p) bufPtr (%p): %s", buf, bufPtr, bufPtr);
 
@@ -97,7 +99,7 @@ Datum uint16_out(PG_FUNCTION_ARGS)
  */
 Datum uint16_recv(PG_FUNCTION_ARGS)
 {
-    uint128 *result;
+    uint128 result = 0;
     uint64 high_part, low_part;
 
     StringInfo buf = (StringInfo) PG_GETARG_POINTER(0);
@@ -107,12 +109,10 @@ Datum uint16_recv(PG_FUNCTION_ARGS)
     // Read the low 64 bits from the buffer
     low_part = pq_getmsgint64(buf);
 
-    result = (uint128 *) palloc(sizeof(uint128));
-
     // Combine the two 64-bit parts into a 128-bit value
-    *result = ((uint128) high_part << 64) | (uint128) low_part;
+    result = ((uint128) high_part << 64) | (uint128) low_part;
 
-    PG_RETURN_UINT128_P(result);
+    PG_RETURN_UINT128(result);
 }
 
 /*
@@ -121,29 +121,22 @@ Datum uint16_recv(PG_FUNCTION_ARGS)
 Datum uint16_send(PG_FUNCTION_ARGS)
 {
     StringInfoData buf;
-    uint128 *arg1 = PG_GETARG_UINT128_P(0);
+    uint128 arg1 = PG_GETARG_UINT128(0);
 
     pq_begintypsend(&buf);
-    pq_sendint64(&buf, (uint64) ((*arg1) >> 64)); // Extract the high 64 bits
-    pq_sendint64(&buf, (uint64) (*arg1)); // Extract the low 64 bits
+    pq_sendint64(&buf, arg1 >> 64); // Extract the high 64 bits
+    pq_sendint64(&buf, arg1); // Extract the low 64 bits
     PG_RETURN_BYTEA_P(pq_endtypsend(&buf));
 }
 
 // Comparision ops
 
-DEFINE_UINT16_SELF_COMPARISON_FUNC(eq, ==);
-DEFINE_UINT16_SELF_COMPARISON_FUNC(ne, !=);
-DEFINE_UINT16_SELF_COMPARISON_FUNC(lt, <);
-DEFINE_UINT16_SELF_COMPARISON_FUNC(gt, >);
-DEFINE_UINT16_SELF_COMPARISON_FUNC(le, <=);
-DEFINE_UINT16_SELF_COMPARISON_FUNC(ge, >=);
-
-DEFINE_UINT16_CMP_INT_FUNCS(eq, ==);
-DEFINE_UINT16_CMP_INT_FUNCS(ne, !=);
-DEFINE_UINT16_CMP_INT_FUNCS(lt, <);
-DEFINE_UINT16_CMP_INT_FUNCS(gt, >);
-DEFINE_UINT16_CMP_INT_FUNCS(le, <=);
-DEFINE_UINT16_CMP_INT_FUNCS(ge, >=);
+DEFINE_UINT16_CMP_SIGNED_AND_UNSIGNED_INT_FUNCS(eq, ==, CMP_EQ);
+DEFINE_UINT16_CMP_SIGNED_AND_UNSIGNED_INT_FUNCS(ne, !=, CMP_NE);
+DEFINE_UINT16_CMP_SIGNED_AND_UNSIGNED_INT_FUNCS(lt, <, CMP_LT);
+DEFINE_UINT16_CMP_SIGNED_AND_UNSIGNED_INT_FUNCS(gt, >, CMP_GT);
+DEFINE_UINT16_CMP_SIGNED_AND_UNSIGNED_INT_FUNCS(le, <=, CMP_LE);
+DEFINE_UINT16_CMP_SIGNED_AND_UNSIGNED_INT_FUNCS(ge, >=, CMP_GE);
 
 /* handler for btree index operator */
 Datum uint16_cmp(PG_FUNCTION_ARGS)
@@ -158,55 +151,54 @@ Datum uint16_cmp(PG_FUNCTION_ARGS)
 
 Datum uint16_hash(PG_FUNCTION_ARGS)
 {
-    uint128 *val = PG_GETARG_UINT128_P(0);
-    uint64 high = (uint64) (*val >> 64);
-    uint64 low = (uint64) (*val);
+    uint128 val = PG_GETARG_UINT128(0);
 
     PG_RETURN_UINT64(
         hash_combine(
-            DatumGetUInt32(hashuint8(high)),
-            DatumGetUInt32(hashuint8(low))
+            DatumGetUInt32(hashuint8(val >> 64)),
+            DatumGetUInt32(hashuint8(val))
         )
     );
 }
 
 // Arithmetic ops
 
-DEFINE_UINT16_SELF_OVERFLOW_ARITHMETIC_FUNC(add, add_u128_overflow);
-DEFINE_UINT16_SELF_OVERFLOW_ARITHMETIC_FUNC(sub, sub_u128_overflow);
-DEFINE_UINT16_SELF_OVERFLOW_ARITHMETIC_FUNC(mul, mul_u128_overflow);
-DEFINE_UINT16_SELF_DIV_ARITHMETIC_FUNC(div, /);
-DEFINE_UINT16_SELF_DIV_ARITHMETIC_FUNC(mod, %);
+DEFINE_UINT16_UNSIGNED_INT_OVERFLOW_ARITHMETIC_FUNCS(add, add_u128_overflow);
+DEFINE_UINT16_UNSIGNED_INT_OVERFLOW_ARITHMETIC_FUNCS(sub, sub_u128_overflow);
+DEFINE_UINT16_UNSIGNED_INT_OVERFLOW_ARITHMETIC_FUNCS(mul, mul_u128_overflow);
+DEFINE_UINT16_UNSIGNED_INT_DIV_ARITHMETIC_FUNCS(div, /);
+DEFINE_UINT16_UNSIGNED_INT_DIV_ARITHMETIC_FUNCS(mod, %);
 
-DEFINE_UINT16_INT_OVERFLOW_ARITHMETIC_FUNCS(add, add_u128_overflow);
-DEFINE_UINT16_INT_OVERFLOW_ARITHMETIC_FUNCS(sub, sub_u128_overflow);
-DEFINE_UINT16_INT_OVERFLOW_ARITHMETIC_FUNCS(mul, mul_u128_overflow);
-DEFINE_UINT16_INT_DIV_ARITHMETIC_FUNCS(div, /);
-DEFINE_UINT16_INT_DIV_ARITHMETIC_FUNCS(mod, %);
+DEFINE_UINT16_SIGNED_INT_OVERFLOW_ARITHMETIC_FUNCS(add, add_u128, OVERFLOW_OP_ADD);
+DEFINE_UINT16_SIGNED_INT_OVERFLOW_ARITHMETIC_FUNCS(sub, sub_u128, OVERFLOW_OP_SUB);
+DEFINE_UINT16_SIGNED_INT_OVERFLOW_ARITHMETIC_FUNCS(mul, mul_u128, OVERFLOW_OP_MUL);
+DEFINE_UINT16_SIGNED_INT_DIV_ARITHMETIC_FUNCS(div, /);
+DEFINE_UINT16_SIGNED_INT_DIV_ARITHMETIC_FUNCS(mod, %);
+
+DEFINE_SIGNED_INT_UINT16_OVERFLOW_ARITHMETIC_FUNCS(add);
+DEFINE_SIGNED_INT_UINT16_OVERFLOW_ARITHMETIC_FUNCS(sub);
+DEFINE_SIGNED_INT_UINT16_OVERFLOW_ARITHMETIC_FUNCS(mul);
+
+DEFINE_SIGNED_INT_UINT16_DIV_ARITHMETIC_FUNCS();
+DEFINE_SIGNED_INT_UINT16_MOD_ARITHMETIC_FUNCS();
 
 // Bitwise ops
 
-DEFINE_UINT16_SELF_BITWISE_FUNC(xor, ^);
-DEFINE_UINT16_SELF_BITWISE_FUNC(and, &);
-DEFINE_UINT16_SELF_BITWISE_FUNC(or, |);
-
 Datum uint16_not(PG_FUNCTION_ARGS)
 {
-    uint128 *a = PG_GETARG_UINT128_P(0);
-    uint128 *result;
-
-    result = (uint128 *) palloc(sizeof(uint128));
-    *result = ~(*a); // Bitwise NOT
-
-    PG_RETURN_UINT128_P(result);
+    PG_RETURN_UINT128(~(PG_GETARG_UINT128(0)));
 }
 
-DEFINE_UINT16_SELF_BITWISE_SHIFT_FUNC(shl, <<);
-DEFINE_UINT16_SELF_BITWISE_SHIFT_FUNC(shr, >>);
+DEFINE_UINT16_BITWISE_SHIFT_FUNC(shl, <<);
+DEFINE_UINT16_BITWISE_SHIFT_FUNC(shr, >>);
 
-DEFINE_UINT16_INT_BITWISE_FUNCS(xor, ^);
-DEFINE_UINT16_INT_BITWISE_FUNCS(and, &);
-DEFINE_UINT16_INT_BITWISE_FUNCS(or, |);
+DEFINE_UINT16_SIGNED_AND_UNSIGNED_INT_BITWISE_FUNCS(xor, ^);
+DEFINE_UINT16_SIGNED_AND_UNSIGNED_INT_BITWISE_FUNCS(and, &);
+DEFINE_UINT16_SIGNED_AND_UNSIGNED_INT_BITWISE_FUNCS(or, |);
+
+DEFINE_SIGNED_INT_UINT16_BITWISE_FUNCS(xor, ^);
+DEFINE_SIGNED_INT_UINT16_BITWISE_FUNCS(and, &);
+DEFINE_SIGNED_INT_UINT16_BITWISE_FUNCS(or, |);
 
 // Cast ops
 
@@ -214,7 +206,6 @@ DEFINE_UINT16_FROM_INT_FUNC(int2, int16, PG_GETARG_INT16);
 DEFINE_UINT16_FROM_INT_FUNC(int4, int32, PG_GETARG_INT32);
 DEFINE_UINT16_FROM_INT_FUNC(int8, int64, PG_GETARG_INT64);
 DEFINE_UINT16_FROM_INT_FUNC(uint8, uint64, PG_GETARG_UINT64);
-
 
 DEFINE_UINT16_TO_INT_FUNC(int2, int16, INT16_MAX, PG_RETURN_INT16);
 DEFINE_UINT16_TO_INT_FUNC(int4, int32, INT32_MAX, PG_RETURN_INT32);
@@ -227,7 +218,7 @@ DEFINE_UINT16_TO_INT_FUNC(uint8, uint64, UINT64_MAX, PG_RETURN_UINT64);
 Datum uint16_from_uuid(PG_FUNCTION_ARGS)
 {
     pg_uuid_t *uuid = PG_GETARG_UUID_P(0);
-    uint128 *result = (uint128 *) palloc(sizeof(uint128));
+    uint128 *result = palloc(sizeof(uint128));
 
     *result = be128toh(*(uint128 *) (uuid->data));
 
@@ -236,10 +227,10 @@ Datum uint16_from_uuid(PG_FUNCTION_ARGS)
 
 Datum uint16_to_uuid(PG_FUNCTION_ARGS)
 {
-    uint128 *uint_value = PG_GETARG_UINT128_P(0);
-    pg_uuid_t *uuid = (pg_uuid_t *) palloc(sizeof(pg_uuid_t));
+    uint128   *uint = PG_GETARG_UINT128_P(0);
+    pg_uuid_t *uuid = palloc(sizeof(pg_uuid_t));
 
-    *(uint128 *) (uuid->data) = htobe128(*uint_value);
+    *(uint128 *) (uuid->data) = htobe128(*uint);
 
     PG_RETURN_UUID_P(uuid);
 }

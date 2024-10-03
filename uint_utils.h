@@ -5,14 +5,29 @@
 #include <access/hash.h>
 #include <stdint.h>
 
+static inline uint128* AllocUint128(uint128 initial)
+{
+    uint128* ptr = palloc(sizeof(uint128));
+    // Out of memory
+    if (ptr == NULL) {
+        return NULL;
+    }
+
+    *ptr = initial;
+
+    return ptr;
+}
+
 #define INT128_MAX (__int128) (((unsigned __int128) 1 << ((__SIZEOF_INT128__ * __CHAR_BIT__) - 1)) - 1)
 #define INT128_MIN (-INT128_MAX - 1)
 #define UINT128_MAX ((2 * (unsigned __int128) INT128_MAX) + 1)
 
 #define Uint128PGetDatum(X)		    PointerGetDatum(X)
 #define PG_RETURN_UINT128_P(X)		return Uint128PGetDatum(X)
+#define PG_RETURN_UINT128(X)		return Uint128PGetDatum(AllocUint128(X))
 #define DatumGetUint128P(X)		    ((uint128 *) DatumGetPointer(X))
 #define PG_GETARG_UINT128_P(X)		DatumGetUint128P(PG_GETARG_DATUM(X))
+#define PG_GETARG_UINT128(X)		*DatumGetUint128P(PG_GETARG_DATUM(X))
 
 #ifndef PG_GETARG_UINT64
 #define PG_GETARG_UINT64(n)  DatumGetUInt64(PG_GETARG_DATUM(n))

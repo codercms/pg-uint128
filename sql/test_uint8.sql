@@ -1,5 +1,3 @@
-CREATE EXTENSION uint128;
-
 -- Testing uint8
 
 -- Ops block

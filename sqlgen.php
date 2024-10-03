@@ -1011,14 +1011,11 @@ file_put_contents("uint128--1.0.0.sql", $buf);
 @mkdir("sql");
 @mkdir("expected");
 
-$testPrefix = "CREATE EXTENSION {$extName};\n\n";
-$expectedPrefix = "CREATE EXTENSION {$extName};\n";
-
 foreach ($types as $type) {
     [$test, $expected] = $type->toSQLTests();
 
-    file_put_contents("sql/test_{$type->name}.sql", $testPrefix . $test);
-    file_put_contents("expected/test_{$type->name}.out", $expectedPrefix . $expected);
+    file_put_contents("sql/test_{$type->name}.sql", $test);
+    file_put_contents("expected/test_{$type->name}.out", $expected);
 }
 
 return;

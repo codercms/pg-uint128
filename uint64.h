@@ -9,7 +9,7 @@
     PG_FUNCTION_INFO_V1(uint8_from_##pgtype); \
     Datum uint8_from_##pgtype(PG_FUNCTION_ARGS) { \
         ctype a = pg_getarg_macro(0); \
-        if (a > UINT64_MAX) { \
+        if (a < 0 || a > UINT64_MAX) { \
             OUT_OF_RANGE_ERR(uint8); \
         } \
         PG_RETURN_UINT64((uint64)a); \
@@ -130,6 +130,7 @@
     DEFINE_UINT8_UNSIGNED_INT_OVERFLOW_ARITHMETIC_FUNC(uint8,  uint64,   PG_GETARG_UINT64,    opname, overflow_fn); \
     DEFINE_UINT8_UNSIGNED_INT_OVERFLOW_ARITHMETIC_FUNC(uint16, uint128, *PG_GETARG_UINT128_P, opname, overflow_fn);
 
+// #include <inttypes.h>
 
 #define DEFINE_UINT8_SIGNED_INT_OVERFLOW_ARITHMETIC_FUNC(pgtype, ctype, pg_getarg_macro, opname, overflow_fn, overflow_op) \
     PG_FUNCTION_INFO_V1(uint8_##opname##_##pgtype); \
@@ -137,6 +138,8 @@
         uint64 a = PG_GETARG_UINT64(0); \
         ctype  b = pg_getarg_macro(1); \
         uint64 result; \
+        \
+        /* elog(INFO, "a = %" PRIu64 ", b = %" PRId64, a, b); */ \
         \
         if (overflow_op == OVERFLOW_OP_MUL && b < 0) { \
             UINT_MULTIPLY_BY_NEGATIVE_SIGNED_INT_ERR; \
