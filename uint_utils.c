@@ -11,7 +11,17 @@ int parse_uint128(const char *str, uint128 *result)
         }
 
         // Shift left by 10 and add the new digit
-        *result = *result * 10 + (str[i] - '0');
+        // *result * 10 + (str[i] - '0');
+
+        if (mul_u128_overflow(*result, 10, result)) {
+            // Overflow detected
+            return -2;
+        }
+
+        if (add_u128_overflow(*result, (str[i] - '0'), result)) {
+            // Overflow detected
+            return -2;
+        }
     }
 
     return 0;
@@ -28,7 +38,17 @@ int parse_uint64(const char *str, uint64 *result)
         }
 
         // Shift left by 10 and add the new digit
-        *result = *result * 10 + (str[i] - '0');
+        // *result = *result * 10 + (str[i] - '0');
+
+        if (mul_u64_overflow(*result, 10, result)) {
+            // Overflow detected
+            return -2;
+        }
+
+        if (add_u64_overflow(*result, (str[i] - '0'), result)) {
+            // Overflow detected
+            return -2;
+        }
     }
 
     return 0;

@@ -1,10 +1,12 @@
 #include "int_utils.h"
+#include "uint_utils.h"
 
 // Function to parse int128 from string
 int parse_int128(const char *str, int128 *result)
 {
     size_t len = strlen(str);
     bool is_negative = false;
+    int uint_res = 0;
 
     *result = 0;
 
@@ -16,27 +18,37 @@ int parse_int128(const char *str, int128 *result)
     if (str[0] == '-') {
         is_negative = true;
         str++;  // Move to the next character
-        len--;
     } else if (str[0] == '+') {
         str++;  // Move to the next character
-        len--;
     }
 
-    for (size_t i = 0; i < len; i++) {
-        if (str[i] < '0' || str[i] > '9') {
-            return -1;
-        }
-
-        // Shift left by 10 and add the new digit
-        *result = *result * 10 + (str[i] - '0');
-    }
+    if ((uint_res = parse_uint128(str, (uint128 *)result)) != 0) {
+        // Overflow detected
+        return uint_res;
+    };
 
     if (is_negative) {
+        // If result equals INT128_MIN, we can't safely negate it
+        if (*(uint128*)result > (uint128)INT128_MAX + 1ULL) {
+            // Detected overflow if the unsigned value is larger than INT128_MAX + 1
+            return -3;
+        }
+
+        // Safely negate the result
         *result = -(*result);
+
+        return 0;
+    }
+
+    // Check if the value parsed exceeds INT128_MAX (positive overflow)
+    if (*(uint128*)result > INT128_MAX) {
+        return -3;  // Overflow detected for positive range
     }
 
     return 0;
 }
+
+static const char *int128_min_str = "-170141183460469231731687303715884105728";
 
 static const char *smallsString =
         "00" "01" "02" "03" "04" "05" "06" "07" "08" "09"
@@ -72,6 +84,18 @@ char *int128_to_string_v2(int128 value, char *buffer, size_t buffer_size)
 
     // Check if the number is negative
     if (value < 0) {
+        // Special case for INT128_MIN
+        if (value == INT128_MIN) {
+            // Write the string representation of INT128_MIN directly
+            size_t len = strlen(int128_min_str);
+
+            // Adjust ptr to point to where the number will go
+            ptr -= len;
+            strcpy(ptr, int128_min_str);
+
+            return ptr;
+        }
+
         is_negative = true;
         value = -value; // Make it positive for processing
     }

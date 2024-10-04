@@ -278,6 +278,14 @@ foreach (INT_TYPES as $LEFT_TYPE) {
     $buf .= genSameSignArithmFunc(INT128, $LEFT_TYPE, Op::Div) . "\n\n";
     $buf .= genSameSignArithmFunc(INT128, $LEFT_TYPE, Op::Mod) . "\n\n";
 
+    if ($LEFT_TYPE !== INT128) {
+        $buf .= genSameSignArithmFunc($LEFT_TYPE, INT128, Op::Add) . "\n\n";
+        $buf .= genSameSignArithmFunc($LEFT_TYPE, INT128, Op::Sub) . "\n\n";
+        $buf .= genSameSignArithmFunc($LEFT_TYPE, INT128, Op::Mul) . "\n\n";
+        $buf .= genSameSignArithmFunc($LEFT_TYPE, INT128, Op::Div) . "\n\n";
+        $buf .= genSameSignArithmFunc($LEFT_TYPE, INT128, Op::Mod) . "\n\n";
+    }
+
     $buf .= "\n// Mixed sign, signed INT with UINT arithmetic funcs\n\n";
 
     foreach (UINT_TYPES as $RIGHT_TYPE) {

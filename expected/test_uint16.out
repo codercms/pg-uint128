@@ -24,6 +24,18 @@ SELECT 1::uint16 = 0::int2;
  f
 (1 row)
 
+SELECT 1::int2 = 1::uint16;
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT 1::int2 = 0::uint16;
+ ?column? 
+----------
+ f
+(1 row)
+
 SELECT 1::uint16 = 1::int4;
  ?column? 
 ----------
@@ -36,6 +48,18 @@ SELECT 1::uint16 = 0::int4;
  f
 (1 row)
 
+SELECT 1::int4 = 1::uint16;
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT 1::int4 = 0::uint16;
+ ?column? 
+----------
+ f
+(1 row)
+
 SELECT 1::uint16 = 1::int8;
  ?column? 
 ----------
@@ -43,6 +67,18 @@ SELECT 1::uint16 = 1::int8;
 (1 row)
 
 SELECT 1::uint16 = 0::int8;
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT 1::int8 = 1::uint16;
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT 1::int8 = 0::uint16;
  ?column? 
 ----------
  f
@@ -72,6 +108,18 @@ SELECT 0::uint16 <> 0::int2;
  f
 (1 row)
 
+SELECT 1::int2 <> 0::uint16;
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT 0::int2 <> 0::uint16;
+ ?column? 
+----------
+ f
+(1 row)
+
 SELECT 1::uint16 <> 0::int4;
  ?column? 
 ----------
@@ -84,6 +132,18 @@ SELECT 0::uint16 <> 0::int4;
  f
 (1 row)
 
+SELECT 1::int4 <> 0::uint16;
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT 0::int4 <> 0::uint16;
+ ?column? 
+----------
+ f
+(1 row)
+
 SELECT 1::uint16 <> 0::int8;
  ?column? 
 ----------
@@ -91,6 +151,18 @@ SELECT 1::uint16 <> 0::int8;
 (1 row)
 
 SELECT 0::uint16 <> 0::int8;
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT 1::int8 <> 0::uint16;
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT 0::int8 <> 0::uint16;
  ?column? 
 ----------
  f
@@ -120,6 +192,18 @@ SELECT 0::uint16 > 1::int2;
  f
 (1 row)
 
+SELECT 1::int2 > 0::uint16;
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT 0::int2 > 1::uint16;
+ ?column? 
+----------
+ f
+(1 row)
+
 SELECT 1::uint16 > 0::int4;
  ?column? 
 ----------
@@ -132,6 +216,18 @@ SELECT 0::uint16 > 1::int4;
  f
 (1 row)
 
+SELECT 1::int4 > 0::uint16;
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT 0::int4 > 1::uint16;
+ ?column? 
+----------
+ f
+(1 row)
+
 SELECT 1::uint16 > 0::int8;
  ?column? 
 ----------
@@ -139,6 +235,18 @@ SELECT 1::uint16 > 0::int8;
 (1 row)
 
 SELECT 0::uint16 > 1::int8;
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT 1::int8 > 0::uint16;
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT 0::int8 > 1::uint16;
  ?column? 
 ----------
  f
@@ -168,6 +276,18 @@ SELECT 1::uint16 < 0::int2;
  f
 (1 row)
 
+SELECT 0::int2 < 1::uint16;
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT 1::int2 < 0::uint16;
+ ?column? 
+----------
+ f
+(1 row)
+
 SELECT 0::uint16 < 1::int4;
  ?column? 
 ----------
@@ -180,6 +300,18 @@ SELECT 1::uint16 < 0::int4;
  f
 (1 row)
 
+SELECT 0::int4 < 1::uint16;
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT 1::int4 < 0::uint16;
+ ?column? 
+----------
+ f
+(1 row)
+
 SELECT 0::uint16 < 1::int8;
  ?column? 
 ----------
@@ -187,6 +319,18 @@ SELECT 0::uint16 < 1::int8;
 (1 row)
 
 SELECT 1::uint16 < 0::int8;
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT 0::int8 < 1::uint16;
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT 1::int8 < 0::uint16;
  ?column? 
 ----------
  f
@@ -228,6 +372,24 @@ SELECT 1::uint16 >= 1::int2;
  t
 (1 row)
 
+SELECT 1::int2 >= 0::uint16;
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT 0::int2 >= 1::uint16;
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT 1::int2 >= 1::uint16;
+ ?column? 
+----------
+ t
+(1 row)
+
 SELECT 1::uint16 >= 0::int4;
  ?column? 
 ----------
@@ -246,6 +408,24 @@ SELECT 1::uint16 >= 1::int4;
  t
 (1 row)
 
+SELECT 1::int4 >= 0::uint16;
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT 0::int4 >= 1::uint16;
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT 1::int4 >= 1::uint16;
+ ?column? 
+----------
+ t
+(1 row)
+
 SELECT 1::uint16 >= 0::int8;
  ?column? 
 ----------
@@ -259,6 +439,24 @@ SELECT 0::uint16 >= 1::int8;
 (1 row)
 
 SELECT 1::uint16 >= 1::int8;
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT 1::int8 >= 0::uint16;
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT 0::int8 >= 1::uint16;
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT 1::int8 >= 1::uint16;
  ?column? 
 ----------
  t
@@ -300,6 +498,24 @@ SELECT 1::uint16 <= 1::int2;
  t
 (1 row)
 
+SELECT 0::int2 <= 1::uint16;
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT 1::int2 <= 0::uint16;
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT 1::int2 <= 1::uint16;
+ ?column? 
+----------
+ t
+(1 row)
+
 SELECT 0::uint16 <= 1::int4;
  ?column? 
 ----------
@@ -313,6 +529,24 @@ SELECT 1::uint16 <= 0::int4;
 (1 row)
 
 SELECT 1::uint16 <= 1::int4;
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT 0::int4 <= 1::uint16;
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT 1::int4 <= 0::uint16;
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT 1::int4 <= 1::uint16;
  ?column? 
 ----------
  t
@@ -336,6 +570,24 @@ SELECT 1::uint16 <= 1::int8;
  t
 (1 row)
 
+SELECT 0::int8 <= 1::uint16;
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT 1::int8 <= 0::uint16;
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT 1::int8 <= 1::uint16;
+ ?column? 
+----------
+ t
+(1 row)
+
 SELECT 120::uint16 + 10::uint16;
  ?column? 
 ----------
@@ -350,6 +602,20 @@ SELECT 120::uint16 + 10::int2;
 
 SELECT 340282366920938463463374607431768211455::uint16 + 1::int2;
 ERROR:  uint16 out of range
+SELECT 120::int2 + 10::uint16;
+ ?column? 
+----------
+      130
+(1 row)
+
+SELECT 32767::int2 + 1::uint16;
+ERROR:  int2 out of range
+SELECT (-120)::int2 + 10::uint16;
+ ?column? 
+----------
+     -110
+(1 row)
+
 SELECT 120::uint16 + 10::int4;
  ?column? 
 ----------
@@ -358,6 +624,20 @@ SELECT 120::uint16 + 10::int4;
 
 SELECT 340282366920938463463374607431768211455::uint16 + 1::int4;
 ERROR:  uint16 out of range
+SELECT 120::int4 + 10::uint16;
+ ?column? 
+----------
+      130
+(1 row)
+
+SELECT 2147483647::int4 + 1::uint16;
+ERROR:  int4 out of range
+SELECT (-120)::int4 + 10::uint16;
+ ?column? 
+----------
+     -110
+(1 row)
+
 SELECT 120::uint16 + 10::int8;
  ?column? 
 ----------
@@ -366,6 +646,20 @@ SELECT 120::uint16 + 10::int8;
 
 SELECT 340282366920938463463374607431768211455::uint16 + 1::int8;
 ERROR:  uint16 out of range
+SELECT 120::int8 + 10::uint16;
+ ?column? 
+----------
+      130
+(1 row)
+
+SELECT 9223372036854775807::int8 + 1::uint16;
+ERROR:  int8 out of range
+SELECT (-120)::int8 + 10::uint16;
+ ?column? 
+----------
+     -110
+(1 row)
+
 SELECT 120::uint16 - 10::uint16;
  ?column? 
 ----------
@@ -380,6 +674,20 @@ SELECT 120::uint16 - 10::int2;
 
 SELECT 0::uint16 - 1::int2;
 ERROR:  uint16 out of range
+SELECT 120::int2 - 10::uint16;
+ ?column? 
+----------
+      110
+(1 row)
+
+SELECT (-32768)::int2 - 1::uint16;
+ERROR:  int2 out of range
+SELECT (-120)::int2 - 10::uint16;
+ ?column? 
+----------
+     -130
+(1 row)
+
 SELECT 120::uint16 - 10::int4;
  ?column? 
 ----------
@@ -388,6 +696,20 @@ SELECT 120::uint16 - 10::int4;
 
 SELECT 0::uint16 - 1::int4;
 ERROR:  uint16 out of range
+SELECT 120::int4 - 10::uint16;
+ ?column? 
+----------
+      110
+(1 row)
+
+SELECT (-2147483648)::int4 - 1::uint16;
+ERROR:  int4 out of range
+SELECT (-120)::int4 - 10::uint16;
+ ?column? 
+----------
+     -130
+(1 row)
+
 SELECT 120::uint16 - 10::int8;
  ?column? 
 ----------
@@ -396,6 +718,20 @@ SELECT 120::uint16 - 10::int8;
 
 SELECT 0::uint16 - 1::int8;
 ERROR:  uint16 out of range
+SELECT 120::int8 - 10::uint16;
+ ?column? 
+----------
+      110
+(1 row)
+
+SELECT (-9223372036854775808)::int8 - 1::uint16;
+ERROR:  int8 out of range
+SELECT (-120)::int8 - 10::uint16;
+ ?column? 
+----------
+     -130
+(1 row)
+
 SELECT 120::uint16 * 10::uint16;
  ?column? 
 ----------
@@ -410,6 +746,20 @@ SELECT 120::uint16 * 10::int2;
 
 SELECT 340282366920938463463374607431768211455::uint16 * 2::int2;
 ERROR:  uint16 out of range
+SELECT 120::int2 * 10::uint16;
+ ?column? 
+----------
+     1200
+(1 row)
+
+SELECT 32767::int2 * 2::uint16;
+ERROR:  int2 out of range
+SELECT (-120)::int2 * 10::uint16;
+ ?column? 
+----------
+    -1200
+(1 row)
+
 SELECT 120::uint16 * 10::int4;
  ?column? 
 ----------
@@ -418,6 +768,20 @@ SELECT 120::uint16 * 10::int4;
 
 SELECT 340282366920938463463374607431768211455::uint16 * 2::int4;
 ERROR:  uint16 out of range
+SELECT 120::int4 * 10::uint16;
+ ?column? 
+----------
+     1200
+(1 row)
+
+SELECT 2147483647::int4 * 2::uint16;
+ERROR:  int4 out of range
+SELECT (-120)::int4 * 10::uint16;
+ ?column? 
+----------
+    -1200
+(1 row)
+
 SELECT 120::uint16 * 10::int8;
  ?column? 
 ----------
@@ -426,6 +790,20 @@ SELECT 120::uint16 * 10::int8;
 
 SELECT 340282366920938463463374607431768211455::uint16 * 2::int8;
 ERROR:  uint16 out of range
+SELECT 120::int8 * 10::uint16;
+ ?column? 
+----------
+     1200
+(1 row)
+
+SELECT 9223372036854775807::int8 * 2::uint16;
+ERROR:  int8 out of range
+SELECT (-120)::int8 * 10::uint16;
+ ?column? 
+----------
+    -1200
+(1 row)
+
 SELECT 120::uint16 / 10::uint16;
  ?column? 
 ----------
@@ -440,6 +818,20 @@ SELECT 120::uint16 / 10::int2;
 
 SELECT 1::uint16 / 0::int2;
 ERROR:  division by zero
+SELECT 120::int2 / 10::uint16;
+ ?column? 
+----------
+       12
+(1 row)
+
+SELECT 1::int2 / 0::uint16;
+ERROR:  division by zero
+SELECT (-120)::int2 / 10::uint16;
+ ?column? 
+----------
+      -12
+(1 row)
+
 SELECT 120::uint16 / 10::int4;
  ?column? 
 ----------
@@ -448,6 +840,20 @@ SELECT 120::uint16 / 10::int4;
 
 SELECT 1::uint16 / 0::int4;
 ERROR:  division by zero
+SELECT 120::int4 / 10::uint16;
+ ?column? 
+----------
+       12
+(1 row)
+
+SELECT 1::int4 / 0::uint16;
+ERROR:  division by zero
+SELECT (-120)::int4 / 10::uint16;
+ ?column? 
+----------
+      -12
+(1 row)
+
 SELECT 120::uint16 / 10::int8;
  ?column? 
 ----------
@@ -456,6 +862,20 @@ SELECT 120::uint16 / 10::int8;
 
 SELECT 1::uint16 / 0::int8;
 ERROR:  division by zero
+SELECT 120::int8 / 10::uint16;
+ ?column? 
+----------
+       12
+(1 row)
+
+SELECT 1::int8 / 0::uint16;
+ERROR:  division by zero
+SELECT (-120)::int8 / 10::uint16;
+ ?column? 
+----------
+      -12
+(1 row)
+
 SELECT 120::uint16 % 10::uint16;
  ?column? 
 ----------
@@ -470,6 +890,20 @@ SELECT 120::uint16 % 10::int2;
 
 SELECT 1::uint16 % 0::int2;
 ERROR:  division by zero
+SELECT 120::int2 % 10::uint16;
+ ?column? 
+----------
+        0
+(1 row)
+
+SELECT 1::int2 % 0::uint16;
+ERROR:  division by zero
+SELECT (-120)::int2 % 10::uint16;
+ ?column? 
+----------
+        0
+(1 row)
+
 SELECT 120::uint16 % 10::int4;
  ?column? 
 ----------
@@ -478,6 +912,20 @@ SELECT 120::uint16 % 10::int4;
 
 SELECT 1::uint16 % 0::int4;
 ERROR:  division by zero
+SELECT 120::int4 % 10::uint16;
+ ?column? 
+----------
+        0
+(1 row)
+
+SELECT 1::int4 % 0::uint16;
+ERROR:  division by zero
+SELECT (-120)::int4 % 10::uint16;
+ ?column? 
+----------
+        0
+(1 row)
+
 SELECT 120::uint16 % 10::int8;
  ?column? 
 ----------
@@ -486,3 +934,17 @@ SELECT 120::uint16 % 10::int8;
 
 SELECT 1::uint16 % 0::int8;
 ERROR:  division by zero
+SELECT 120::int8 % 10::uint16;
+ ?column? 
+----------
+        0
+(1 row)
+
+SELECT 1::int8 % 0::uint16;
+ERROR:  division by zero
+SELECT (-120)::int8 % 10::uint16;
+ ?column? 
+----------
+        0
+(1 row)
+
