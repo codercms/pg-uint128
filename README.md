@@ -5,8 +5,9 @@ PostgreSQL extension that adds native uint128 support
 * Provides multiple unsigned types:
   * uint16 (uint128)
   * uint8 (uint64)
-* Casts to uint16, uint8, int2, int4, int8, numeric, real, double, uuid
-* Mixed arithmetic support (signed -> unsigned and unsigned -> signed)
+* Binary send/recv support
+* Casts to uint16, uint8, int2, int4, int8, numeric, real, double, uuid (only uint16)
+* Mixed type arithmetic support (signed -> unsigned and unsigned -> signed)
 * Indexing support for BTREE and HASH indexes
 * Rich operators set:
   * \+ - ADD (Addition)

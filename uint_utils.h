@@ -72,18 +72,6 @@ static inline uint128* AllocUint128(uint128 initial)
     ) \
 );
 
-uint32_t Uint32LE(uint8_t *);
-
-uint32_t Uint32BE(uint8_t *);
-
-uint64_t Uint64LE(uint8_t *);
-
-uint64_t Uint64BE(uint8_t *);
-
-uint128 Uint128BE(uint8_t *);
-
-void PutUint64BE(uint8_t *b, uint64_t v);
-
 int parse_uint128(const char *str, uint128 *result);
 
 int parse_uint64(const char *str, uint64 *result);
@@ -177,6 +165,112 @@ static inline Datum hashuint8(uint64 val)
  * Overflow routines for unsigned integers
  *------------------------------------------------------------------------
  */
+
+/*
+ * UINT16
+ */
+
+static inline bool add_u16_overflow(uint16 a, uint16 b, uint16 *result)
+{
+#if defined(HAVE__BUILTIN_OP_OVERFLOW)
+    return __builtin_add_overflow(a, b, result);
+#else
+    uint16		res = a + b;
+
+    if (res < a)
+    {
+        *result = 0x5EED;		/* to avoid spurious warnings */
+        return true;
+    }
+    *result = res;
+    return false;
+#endif
+}
+
+static inline bool sub_u16_overflow(uint16 a, uint16 b, uint16 *result)
+{
+#if defined(HAVE__BUILTIN_OP_OVERFLOW)
+    return __builtin_sub_overflow(a, b, result);
+#else
+    if (b > a)
+    {
+        *result = 0x5EED;		/* to avoid spurious warnings */
+        return true;
+    }
+    *result = a - b;
+    return false;
+#endif
+}
+
+static inline bool mul_u16_overflow(uint16 a, uint16 b, uint16 *result)
+{
+#if defined(HAVE__BUILTIN_OP_OVERFLOW)
+    return __builtin_mul_overflow(a, b, result);
+#else
+    uint32		res = (uint32) a * (uint32) b;
+
+    if (res > PG_UINT16_MAX)
+    {
+        *result = 0x5EED;		/* to avoid spurious warnings */
+        return true;
+    }
+    *result = (uint16) res;
+    return false;
+#endif
+}
+
+/*
+ * UINT32
+ */
+
+static inline bool add_u32_overflow(uint32 a, uint32 b, uint32 *result)
+{
+#if defined(HAVE__BUILTIN_OP_OVERFLOW)
+    return __builtin_add_overflow(a, b, result);
+#else
+    uint32		res = a + b;
+
+    if (res < a)
+    {
+        *result = 0x5EED;		/* to avoid spurious warnings */
+        return true;
+    }
+    *result = res;
+    return false;
+#endif
+}
+
+static inline bool sub_u32_overflow(uint32 a, uint32 b, uint32 *result)
+{
+#if defined(HAVE__BUILTIN_OP_OVERFLOW)
+    return __builtin_sub_overflow(a, b, result);
+#else
+    if (b > a)
+    {
+        *result = 0x5EED;		/* to avoid spurious warnings */
+        return true;
+    }
+    *result = a - b;
+    return false;
+#endif
+}
+
+static inline bool mul_u32_overflow(uint32 a, uint32 b, uint32 *result)
+{
+#if defined(HAVE__BUILTIN_OP_OVERFLOW)
+    return __builtin_mul_overflow(a, b, result);
+#else
+    uint64		res = (uint64) a * (uint64) b;
+
+    if (res > PG_UINT32_MAX)
+    {
+        *result = 0x5EED;		/* to avoid spurious warnings */
+        return true;
+    }
+    *result = (uint32) res;
+    return false;
+#endif
+}
 
 /*
  * UINT64
@@ -297,96 +391,5 @@ static inline bool mul_u128_overflow(uint128 a, uint128 b, uint128 *result)
     return false; // No overflow
 #endif
 }
-
-
-/*
- * Mixed unsigned with signed math overflow check functions
- */
-
-#define NEGATED_S16_MIN_IN_U64 (uint64) INT16_MAX + 1
-#define NEGATED_S32_MIN_IN_U64 (uint64) INT32_MAX + 1
-#define NEGATED_S64_MIN_IN_U64 (uint64) INT64_MAX + 1
-
-#define NEGATED_S16_MIN_IN_U128 (uint128) INT16_MAX + 1
-#define NEGATED_S32_MIN_IN_U128 (uint128) INT32_MAX + 1
-#define NEGATED_S64_MIN_IN_U128 (uint128) INT64_MAX + 1
-#define NEGATED_S128_MIN_IN_U128 (uint128) INT128_MAX + 1
-
-#define DEFINE_UINT_ADD_INT_OVERFLOW_FUNC(unsignedBitSize, signedBitSize) \
-    static inline bool add_u##unsignedBitSize##_s##signedBitSize##_overflow(uint##unsignedBitSize a, int##signedBitSize b, uint##unsignedBitSize *result) \
-    { \
-        if (b < 0) { \
-            return sub_u##unsignedBitSize##_overflow(a, b == INT##signedBitSize##_MIN ? NEGATED_S##signedBitSize##_MIN_IN_U##unsignedBitSize : -b, result); \
-        } \
-        \
-        return add_u##unsignedBitSize##_overflow(a, b, result); \
-    }
-
-#define DEFINE_UINT_SUB_INT_OVERFLOW_FUNC(unsignedBitSize, signedBitSize) \
-    static inline bool sub_u##unsignedBitSize##_s##signedBitSize##_overflow(uint##unsignedBitSize a, int##signedBitSize b, uint##unsignedBitSize *result) \
-    { \
-        if (b < 0) { \
-            return add_u##unsignedBitSize##_overflow(a, b == INT##signedBitSize##_MIN ? NEGATED_S##signedBitSize##_MIN_IN_U##unsignedBitSize : -b, result); \
-        } \
-        \
-        return sub_u##unsignedBitSize##_overflow(a, b, result); \
-    }
-
-#define DEFINE_UINT_MUL_INT_OVERFLOW_FUNC(unsignedBitSize, signedBitSize) \
-    static inline bool mul_u##unsignedBitSize##_s##signedBitSize##_overflow(uint##unsignedBitSize a, int##signedBitSize b, uint##unsignedBitSize *result) \
-    { \
-        /* Multiplication by negative int is not allowed */ \
-        if (b < 0) { \
-            *result = 0x5EED; \
-            return true; \
-        } \
-        \
-        return mul_u##unsignedBitSize##_overflow(a, b, result); \
-    }
-
-/* For IDE auto complete */
-static inline bool add_u64_s16_overflow(uint64 a, int16 b, uint64 *result);
-static inline bool add_u64_s32_overflow(uint64 a, int32 b, uint64 *result);
-static inline bool add_u64_s64_overflow(uint64 a, int64 b, uint64 *result);
-static inline bool sub_u64_s16_overflow(uint64 a, int16 b, uint64 *result);
-static inline bool sub_u64_s32_overflow(uint64 a, int32 b, uint64 *result);
-static inline bool sub_u64_s64_overflow(uint64 a, int64 b, uint64 *result);
-static inline bool mul_u64_s16_overflow(uint64 a, int16 b, uint64 *result);
-static inline bool mul_u64_s32_overflow(uint64 a, int32 b, uint64 *result);
-static inline bool mul_u64_s64_overflow(uint64 a, int64 b, uint64 *result);
-
-static inline bool add_u128_s16_overflow(uint128 a, int16 b, uint128 *result);
-static inline bool add_u128_s32_overflow(uint128 a, int32 b, uint128 *result);
-static inline bool add_u128_s64_overflow(uint128 a, int64 b, uint128 *result);
-static inline bool sub_u128_s16_overflow(uint128 a, int16 b, uint128 *result);
-static inline bool sub_u128_s32_overflow(uint128 a, int32 b, uint128 *result);
-static inline bool sub_u128_s64_overflow(uint128 a, int64 b, uint128 *result);
-static inline bool mul_u128_s16_overflow(uint128 a, int16 b, uint128 *result);
-static inline bool mul_u128_s32_overflow(uint128 a, int32 b, uint128 *result);
-static inline bool mul_u128_s64_overflow(uint128 a, int64 b, uint128 *result);
-
-DEFINE_UINT_ADD_INT_OVERFLOW_FUNC(64, 16);
-DEFINE_UINT_ADD_INT_OVERFLOW_FUNC(64, 32);
-DEFINE_UINT_ADD_INT_OVERFLOW_FUNC(64, 64);
-
-DEFINE_UINT_SUB_INT_OVERFLOW_FUNC(64, 16);
-DEFINE_UINT_SUB_INT_OVERFLOW_FUNC(64, 32);
-DEFINE_UINT_SUB_INT_OVERFLOW_FUNC(64, 64);
-
-DEFINE_UINT_MUL_INT_OVERFLOW_FUNC(64, 16);
-DEFINE_UINT_MUL_INT_OVERFLOW_FUNC(64, 32);
-DEFINE_UINT_MUL_INT_OVERFLOW_FUNC(64, 64);
-
-DEFINE_UINT_ADD_INT_OVERFLOW_FUNC(128, 16);
-DEFINE_UINT_ADD_INT_OVERFLOW_FUNC(128, 32);
-DEFINE_UINT_ADD_INT_OVERFLOW_FUNC(128, 64);
-
-DEFINE_UINT_SUB_INT_OVERFLOW_FUNC(128, 16);
-DEFINE_UINT_SUB_INT_OVERFLOW_FUNC(128, 32);
-DEFINE_UINT_SUB_INT_OVERFLOW_FUNC(128, 64);
-
-DEFINE_UINT_MUL_INT_OVERFLOW_FUNC(128, 16);
-DEFINE_UINT_MUL_INT_OVERFLOW_FUNC(128, 32);
-DEFINE_UINT_MUL_INT_OVERFLOW_FUNC(128, 64);
 
 #endif

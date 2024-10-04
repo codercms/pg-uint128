@@ -11,6 +11,33 @@
 #endif
 #endif
 
+static inline int128* AllocInt128(int128 initial)
+{
+	int128* ptr = palloc(sizeof(int128));
+	// Out of memory
+	if (ptr == NULL) {
+		return NULL;
+	}
+
+	*ptr = initial;
+
+	return ptr;
+}
+
+#define Int128PGetDatum(X)		    PointerGetDatum(X)
+#define PG_RETURN_INT128_P(X)		return Int128PGetDatum(X)
+#define PG_RETURN_INT128(X)		    return Int128PGetDatum(AllocInt128(X))
+#define DatumGetInt128P(X)		    ((int128 *) DatumGetPointer(X))
+#define PG_GETARG_INT128_P(X)		DatumGetInt128P(PG_GETARG_DATUM(X))
+#define PG_GETARG_INT128(X)		    *DatumGetInt128P(PG_GETARG_DATUM(X))
+
+// Function to parse int128 from string
+int parse_int128(const char *str, int128 *result);
+
+// Function to convert int128 to a decimal string using Golang approach
+// inspired by formatBits in strconv/itoa.go
+char *int128_to_string_v2(int128 value, char *buffer, size_t buffer_size);
+
 /*------------------------------------------------------------------------
  * Overflow routines for signed integers
  *------------------------------------------------------------------------
@@ -222,6 +249,42 @@ static inline bool mul_s64_overflow(int64 a, int64 b, int64 *result)
 	}
 	*result = a * b;
 	return false;
+#endif
+}
+
+/*
+ * INT128
+ */
+static inline bool add_s128_overflow(int128 a, int128 b, int128 *result)
+{
+#if __has_builtin(__builtin_add_overflow)
+    return __builtin_add_overflow(a, b, result);
+#else
+	// Not implemented
+	*result = -1;
+	return true;
+#endif
+}
+
+static inline bool sub_s128_overflow(int128 a, int128 b, int128 *result)
+{
+#if __has_builtin(__builtin_sub_overflow)
+    return __builtin_sub_overflow(a, b, result);
+#else
+	// Not implemented
+	*result = -1;
+	return true;
+#endif
+}
+
+static inline bool mul_s128_overflow(int128 a, int128 b, int128 *result)
+{
+#if __has_builtin(__builtin_mul_overflow)
+    return __builtin_mul_overflow(a, b, result);
+#else
+	// Not implemented
+	*result = -1;
+	return true;
 #endif
 }
 
