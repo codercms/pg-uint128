@@ -200,7 +200,7 @@ Datum int2_div_uint2(PG_FUNCTION_ARGS)
     if (b == 0) {
         DIVISION_BY_ZERO_ERR;
     }
-    if (Abs(a) < b) {
+    if (a < 0 || b > INT16_MAX) {
         PG_RETURN_INT16(0);
     }
     PG_RETURN_INT16(a / (int16)b);
@@ -215,7 +215,7 @@ Datum int2_mod_uint2(PG_FUNCTION_ARGS)
     if (b == 0) {
         DIVISION_BY_ZERO_ERR;
     }
-    if (Abs(a) < b) {
+    if (a < 0 || b > INT16_MAX) {
         PG_RETURN_INT16(a);
     }
     PG_RETURN_INT16(a % (int16)b);
@@ -278,7 +278,7 @@ Datum int2_div_uint4(PG_FUNCTION_ARGS)
     if (b == 0) {
         DIVISION_BY_ZERO_ERR;
     }
-    if (Abs(a) < b) {
+    if (a < 0 || b > INT16_MAX) {
         PG_RETURN_INT16(0);
     }
     PG_RETURN_INT16(a / (int16)b);
@@ -293,7 +293,7 @@ Datum int2_mod_uint4(PG_FUNCTION_ARGS)
     if (b == 0) {
         DIVISION_BY_ZERO_ERR;
     }
-    if (Abs(a) < b) {
+    if (a < 0 || b > INT16_MAX) {
         PG_RETURN_INT16(a);
     }
     PG_RETURN_INT16(a % (int16)b);
@@ -356,7 +356,7 @@ Datum int2_div_uint8(PG_FUNCTION_ARGS)
     if (b == 0) {
         DIVISION_BY_ZERO_ERR;
     }
-    if (Abs(a) < b) {
+    if (a < 0 || b > INT16_MAX) {
         PG_RETURN_INT16(0);
     }
     PG_RETURN_INT16(a / (int16)b);
@@ -371,7 +371,7 @@ Datum int2_mod_uint8(PG_FUNCTION_ARGS)
     if (b == 0) {
         DIVISION_BY_ZERO_ERR;
     }
-    if (Abs(a) < b) {
+    if (a < 0 || b > INT16_MAX) {
         PG_RETURN_INT16(a);
     }
     PG_RETURN_INT16(a % (int16)b);
@@ -434,7 +434,7 @@ Datum int2_div_uint16(PG_FUNCTION_ARGS)
     if (b == 0) {
         DIVISION_BY_ZERO_ERR;
     }
-    if (Abs(a) < b) {
+    if (a < 0 || b > INT16_MAX) {
         PG_RETURN_INT16(0);
     }
     PG_RETURN_INT16(a / (int16)b);
@@ -449,7 +449,7 @@ Datum int2_mod_uint16(PG_FUNCTION_ARGS)
     if (b == 0) {
         DIVISION_BY_ZERO_ERR;
     }
-    if (Abs(a) < b) {
+    if (a < 0 || b > INT16_MAX) {
         PG_RETURN_INT16(a);
     }
     PG_RETURN_INT16(a % (int16)b);

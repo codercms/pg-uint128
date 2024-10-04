@@ -70,11 +70,11 @@ This extension tries to solve this unexpected behavior by preventing overflow an
   * With unsigned int dominance - `SELECT 10::uint8 * (-120)::int4;` will result in error `unsigned int multiply by negative signed int is probhibited`, because unsigned integer cannot represent negative values
   * With unsigned int dominance - `SELECT 120::uint8 * 10::int4;` will result in `1200`
 * Division
-  * With signed int dominance - `SELECT (-120)::int4 / 10::uint8;` will result in `-12`
+  * With signed int dominance - `SELECT (-120)::int4 / 10::uint8;` will result in `0` (because negative int is always less than uint)
   * With unsigned int dominance - `SELECT 10::uint8 / (-120)::int4;` will result in error `unsigned int division/modulo by negative signed int is probhibited`, because unsigned integer cannot represent negative values
   * With unsigned int dominance - `SELECT 120::uint8 / 10::int4;` will result in `12`
 * Modulo
-  * With signed int dominance - `SELECT (-3)::int4 % 2::uint8;` will result in `-1`
+  * With signed int dominance - `SELECT (-3)::int4 % 2::uint8;` will result in `-3` (because negative int is always less than int)
   * With unsigned int dominance - `SELECT 3::uint8 % (-2)::int4;` will result in error `unsigned int division/modulo by negative signed int is probhibited`, because unsigned integer cannot represent negative values
   * With unsigned int dominance - `SELECT 3::uint8 % 2::int4;` will result in `1`
 

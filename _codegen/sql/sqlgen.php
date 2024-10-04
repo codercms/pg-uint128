@@ -127,7 +127,7 @@ function genSQLTestForArithmOp(Op $op, Type $leftType, Type $rightType): array
     $expected .= "----------\n";
 
     // psql has different formatting for signed and unsigned integers
-    $expected .= $leftType->isUnsigned
+    $expected .= ($leftType->isUnsigned || $leftType === INT128)
         ? " $expectedVal\n"
         : str_pad($expectedVal, strlen("----------") - 1, pad_type: STR_PAD_LEFT) . "\n";
 
@@ -158,8 +158,8 @@ function genSQLTestForArithmOp(Op $op, Type $leftType, Type $rightType): array
                 Op::Add => '-110',
                 Op::Sub => '-130',
                 Op::Mul => '-1200',
-                Op::Div => '-12',
-                Op::Mod => '0'
+                Op::Div => '0',
+                Op::Mod => '-120'
             };
 
             $sql .= $q;
@@ -169,7 +169,7 @@ function genSQLTestForArithmOp(Op $op, Type $leftType, Type $rightType): array
             $expected .= "----------\n";
 
             // psql has different formatting for signed and unsigned integers
-            $expected .= $leftType->isUnsigned
+            $expected .= ($leftType->isUnsigned || $leftType === INT128)
                 ? " $expectedVal\n"
                 : str_pad($expectedVal, strlen("----------") - 1, pad_type: STR_PAD_LEFT) . "\n";
 

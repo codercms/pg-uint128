@@ -1,7 +1,7 @@
 MODULES = uint128
 EXTENSION = uint128
 DATA = uint128--1.0.0.sql
-REGRESS = create_ext test_uint8 test_uint16
+REGRESS = create_ext test_uint8 test_uint16 test_int16
 
 MODULE_big = $(EXTENSION)
 OBJS = magic.o uint128.o uint64.o int128.o uint_utils.o int_utils.o \

@@ -3,14 +3,6 @@
 
 #include "postgres.h"
 
-#ifndef i64abs
-#ifdef HAVE_LONG_INT_64
-#define i64abs(i) labs(i)
-#else
-#define i64abs(i) llabs(i)
-#endif
-#endif
-
 static inline int128* AllocInt128(int128 initial)
 {
 	int128* ptr = palloc(sizeof(int128));

@@ -5,3 +5,5 @@ results
 *.dll
 *.o
 *.bc
+regression.diffs
+regression.out

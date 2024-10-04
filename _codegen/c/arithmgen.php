@@ -36,7 +36,7 @@ function getArithmOpCastedBasedOnBitSize(Type $left, Type $right, Op $op): strin
     };
 }
 
-function genSameSignArithmFunc(Type $left, Type $right, Op $op)
+function genSameSignArithmFunc(Type $left, Type $right, Op $op): string
 {
     if ($left->isUnsigned != $right->isUnsigned) {
         throw new \InvalidArgumentException("Mixed type arithmetic is not supported");
@@ -87,7 +87,7 @@ function genSameSignArithmFunc(Type $left, Type $right, Op $op)
     return $fn;
 }
 
-function genUIntWithSignedIntArithmFunc(Type $left, Type $right, Op $op)
+function genUIntWithSignedIntArithmFunc(Type $left, Type $right, Op $op): string
 {
     if (!$left->isUnsigned || $right->isUnsigned) {
         throw new \InvalidArgumentException("Only uint with signed int arithmetic is supported");
@@ -170,7 +170,7 @@ function genUIntWithSignedIntArithmFunc(Type $left, Type $right, Op $op)
     return $fn;
 }
 
-function genSignedIntWithUIntArithmFunc(Type $left, Type $right, Op $op)
+function genSignedIntWithUIntArithmFunc(Type $left, Type $right, Op $op): string
 {
     if ($left->isUnsigned || !$right->isUnsigned) {
         throw new \InvalidArgumentException("Only signed int with uint arithmetic is supported");
@@ -193,7 +193,8 @@ function genSignedIntWithUIntArithmFunc(Type $left, Type $right, Op $op)
          * In integer division, any division where the absolute value of the numerator is less than the denominator results in 0.
          * In integer modulo, any division where the absolute value of the numerator is less than the denominator results in original value of numerator.
          */
-        $fn .= "    if (Abs(a) < b) {\n";
+
+        $fn .= "    if (a < 0 || b > {$left->getMaxConstC()}) {\n";
         $fn .= "        $left->pgReturnMacro(" . ($op === Op::Div ? '0' : 'a') . ");\n";
         $fn .= "    }\n";
 

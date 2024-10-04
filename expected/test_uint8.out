@@ -829,7 +829,7 @@ ERROR:  division by zero
 SELECT (-120)::int2 / 10::uint8;
  ?column? 
 ----------
-      -12
+        0
 (1 row)
 
 SELECT 120::uint8 / 10::int4;
@@ -851,7 +851,7 @@ ERROR:  division by zero
 SELECT (-120)::int4 / 10::uint8;
  ?column? 
 ----------
-      -12
+        0
 (1 row)
 
 SELECT 120::uint8 / 10::int8;
@@ -873,7 +873,7 @@ ERROR:  division by zero
 SELECT (-120)::int8 / 10::uint8;
  ?column? 
 ----------
-      -12
+        0
 (1 row)
 
 SELECT 120::uint8 % 10::uint8;
@@ -901,7 +901,7 @@ ERROR:  division by zero
 SELECT (-120)::int2 % 10::uint8;
  ?column? 
 ----------
-        0
+     -120
 (1 row)
 
 SELECT 120::uint8 % 10::int4;
@@ -923,7 +923,7 @@ ERROR:  division by zero
 SELECT (-120)::int4 % 10::uint8;
  ?column? 
 ----------
-        0
+     -120
 (1 row)
 
 SELECT 120::uint8 % 10::int8;
@@ -945,6 +945,6 @@ ERROR:  division by zero
 SELECT (-120)::int8 % 10::uint8;
  ?column? 
 ----------
-        0
+     -120
 (1 row)
 

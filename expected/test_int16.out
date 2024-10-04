@@ -591,13 +591,13 @@ SELECT 1::int8 <= 1::int16;
 SELECT 120::int16 + 10::int16;
  ?column? 
 ----------
-      130
+ 130
 (1 row)
 
 SELECT 120::int16 + 10::int2;
  ?column? 
 ----------
-      130
+ 130
 (1 row)
 
 SELECT 170141183460469231731687303715884105727::int16 + 1::int2;
@@ -613,7 +613,7 @@ ERROR:  int2 out of range
 SELECT 120::int16 + 10::int4;
  ?column? 
 ----------
-      130
+ 130
 (1 row)
 
 SELECT 170141183460469231731687303715884105727::int16 + 1::int4;
@@ -629,7 +629,7 @@ ERROR:  int4 out of range
 SELECT 120::int16 + 10::int8;
  ?column? 
 ----------
-      130
+ 130
 (1 row)
 
 SELECT 170141183460469231731687303715884105727::int16 + 1::int8;
@@ -645,13 +645,13 @@ ERROR:  int8 out of range
 SELECT 120::int16 - 10::int16;
  ?column? 
 ----------
-      110
+ 110
 (1 row)
 
 SELECT 120::int16 - 10::int2;
  ?column? 
 ----------
-      110
+ 110
 (1 row)
 
 SELECT (-170141183460469231731687303715884105728)::int16 - 1::int2;
@@ -667,7 +667,7 @@ ERROR:  int2 out of range
 SELECT 120::int16 - 10::int4;
  ?column? 
 ----------
-      110
+ 110
 (1 row)
 
 SELECT (-170141183460469231731687303715884105728)::int16 - 1::int4;
@@ -683,7 +683,7 @@ ERROR:  int4 out of range
 SELECT 120::int16 - 10::int8;
  ?column? 
 ----------
-      110
+ 110
 (1 row)
 
 SELECT (-170141183460469231731687303715884105728)::int16 - 1::int8;
@@ -699,13 +699,13 @@ ERROR:  int8 out of range
 SELECT 120::int16 * 10::int16;
  ?column? 
 ----------
-     1200
+ 1200
 (1 row)
 
 SELECT 120::int16 * 10::int2;
  ?column? 
 ----------
-     1200
+ 1200
 (1 row)
 
 SELECT 170141183460469231731687303715884105727::int16 * 2::int2;
@@ -721,7 +721,7 @@ ERROR:  int2 out of range
 SELECT 120::int16 * 10::int4;
  ?column? 
 ----------
-     1200
+ 1200
 (1 row)
 
 SELECT 170141183460469231731687303715884105727::int16 * 2::int4;
@@ -737,7 +737,7 @@ ERROR:  int4 out of range
 SELECT 120::int16 * 10::int8;
  ?column? 
 ----------
-     1200
+ 1200
 (1 row)
 
 SELECT 170141183460469231731687303715884105727::int16 * 2::int8;
@@ -753,13 +753,13 @@ ERROR:  int8 out of range
 SELECT 120::int16 / 10::int16;
  ?column? 
 ----------
-       12
+ 12
 (1 row)
 
 SELECT 120::int16 / 10::int2;
  ?column? 
 ----------
-       12
+ 12
 (1 row)
 
 SELECT 1::int16 / 0::int2;
@@ -775,7 +775,7 @@ ERROR:  division by zero
 SELECT 120::int16 / 10::int4;
  ?column? 
 ----------
-       12
+ 12
 (1 row)
 
 SELECT 1::int16 / 0::int4;
@@ -791,7 +791,7 @@ ERROR:  division by zero
 SELECT 120::int16 / 10::int8;
  ?column? 
 ----------
-       12
+ 12
 (1 row)
 
 SELECT 1::int16 / 0::int8;
@@ -807,13 +807,13 @@ ERROR:  division by zero
 SELECT 120::int16 % 10::int16;
  ?column? 
 ----------
-        0
+ 0
 (1 row)
 
 SELECT 120::int16 % 10::int2;
  ?column? 
 ----------
-        0
+ 0
 (1 row)
 
 SELECT 1::int16 % 0::int2;
@@ -829,7 +829,7 @@ ERROR:  division by zero
 SELECT 120::int16 % 10::int4;
  ?column? 
 ----------
-        0
+ 0
 (1 row)
 
 SELECT 1::int16 % 0::int4;
@@ -845,7 +845,7 @@ ERROR:  division by zero
 SELECT 120::int16 % 10::int8;
  ?column? 
 ----------
-        0
+ 0
 (1 row)
 
 SELECT 1::int16 % 0::int8;
