@@ -10,7 +10,7 @@ A PostgreSQL extension that adds native support for unsigned integers and 128-bi
 * Provides signed 128-bit integer type:
   * `int16` (int128)
 * Binary send/recv support
-* Casts to `uint16`, `uint8`, `uint4`, `uint2`, `int16`, `int8`, `int4`, `numeric`, `real`, `double`, `uuid` (for `uint16` only)
+* Casts to `uint16`, `uint8`, `uint4`, `uint2`, `int16`, `int8`, `int4`, `int2`, `numeric`, `real`, `double`, `uuid` (for `uint16` only)
 * Mixed-type arithmetic support (signed ↔ unsigned)
 * Indexing support for BTREE and HASH indexes
 * Rich operators set:
