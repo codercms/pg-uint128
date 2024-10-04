@@ -191,7 +191,7 @@ Datum int4_div_uint2(PG_FUNCTION_ARGS)
     if (b == 0) {
         DIVISION_BY_ZERO_ERR;
     }
-    if (a < 0 || b > INT32_MAX) {
+    if (a < 0) {
         PG_RETURN_INT32(0);
     }
     PG_RETURN_INT32(a / (int32)b);
@@ -206,7 +206,7 @@ Datum int4_mod_uint2(PG_FUNCTION_ARGS)
     if (b == 0) {
         DIVISION_BY_ZERO_ERR;
     }
-    if (a < 0 || b > INT32_MAX) {
+    if (a < 0) {
         PG_RETURN_INT32(a);
     }
     PG_RETURN_INT32(a % (int32)b);

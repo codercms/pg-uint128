@@ -64,7 +64,7 @@ static const char *smallsString =
 
 // Function to convert int128 to a decimal string using Golang approach
 // inspired by formatBits in strconv/itoa.go
-char *int128_to_string_v2(int128 value, char *buffer, size_t buffer_size)
+char *int128_to_string(int128 value, char *buffer, size_t buffer_size)
 {
     char *ptr;
     bool is_negative = false;

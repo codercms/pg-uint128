@@ -1,14 +1,17 @@
 # pg-uint128
-PostgreSQL extension that adds native uint128 support
+A PostgreSQL extension that adds native support for unsigned integers and 128-bit signed/unsigned integer types.
 
 ## Features
 * Provides multiple unsigned types:
-  * uint16 (uint128)
-  * int16 (int128)
-  * uint8 (uint64)
+  * `uint2` (uint16)
+  * `uint4` (uint32)
+  * `uint8` (uint64)
+  * `uint16` (uint128)
+* Provides signed 128-bit integer type:
+  * `int16` (int128)
 * Binary send/recv support
-* Casts to uint16, uint8, int2, int4, int8, int16, numeric, real, double, uuid (only uint16)
-* Mixed type arithmetic support (signed -> unsigned and unsigned -> signed)
+* Casts to `uint16`, `uint8`, `uint4`, `uint2`, `int16`, `int8`, `int4`, `numeric`, `real`, `double`, `uuid` (for `uint16` only)
+* Mixed-type arithmetic support (signed ↔ unsigned)
 * Indexing support for BTREE and HASH indexes
 * Rich operators set:
   * \+ - ADD (Addition)
@@ -22,7 +25,7 @@ PostgreSQL extension that adds native uint128 support
   * \~ - Bitwise NOT
   * \<< - Bitwise SHL (shift left)
   * \>> - Bitwise SHR (shift right)
-* Comparison operators set:
+* Comprehensive set of comparison operators:
   * = - EQ (Equal)
   * \<> (!=) - NE (Not Equal)
   * \> - GT (Greater Than)
@@ -31,7 +34,7 @@ PostgreSQL extension that adds native uint128 support
   * \<= - LE (Less Than or Equal)
 
 ## Mixed type arithmetic
-Mixed type arithmetic between signed and unsigned integer types is quite complex because of different representation for signed and unsigned types.
+Mixed-type arithmetic between signed and unsigned integer types is complex due to the different representations used for each.
 
 Signed integer ranges:
 
@@ -49,37 +52,34 @@ Unsigned integer ranges:
     UInt64 (uint8)   — [0 : 18446744073709551615]
     UInt128 (uint16) — [0 : 340282366920938463463374607431768211455]
 
-From binary point of view UINT8_MAX (255) becomes -1 for signed 8bit integer, UINT 254 becomes -2 for signed 8bit integer and so on.
+From a binary perspective, `UINT8_MAX` (255) becomes `-1` for a signed 8-bit integer, `UINT 254` becomes `-2`, and so on.
 
-This extension tries to solve this unexpected behavior by preventing overflow and underflow in arithmetic operations between signed and unsigned types.
+This extension addresses potential overflow and underflow during arithmetic operations between signed and unsigned types.
 
 ### Arithmetic
 * Addition
-  * With signed int dominance - `SELECT 9223372036854775807::int8 + 9223372036854775807::uint8;` will result in error `int8 out of range`
-  * With unsigned int dominance - `SELECT 9223372036854775807::uint8 + 9223372036854775807::int8;` will result in `18446744073709551614`
+  * Signed int dominant - `SELECT 9223372036854775807::int8 + 9223372036854775807::uint8;` → `int8 out of range`
+  * Unsigned int dominant - `SELECT 9223372036854775807::uint8 + 9223372036854775807::int8;` → `18446744073709551614`
   * 
-  * With signed int dominance - `SELECT (-120)::int4 + 10::uint8;` will result in `-110`
-  * With unsigned int dominance - `SELECT 10::uint8 + (-120)::int4;` will result in error `uint8 out of range`, because unsigned integer cannot represent negative values
-  * With unsigned int dominance - `SELECT 10::uint8 + (-10)::int4;` will result in `0`
+  * Signed int dominant - `SELECT (-120)::int4 + 10::uint8;` → `-110`
+  * Unsigned int dominant - `SELECT 10::uint8 + (-120)::int4;` → `uint8 out of range`, because unsigned integer cannot represent negative values
+  * Unsigned int dominant - `SELECT 10::uint8 + (-10)::int4;` → `0`
 * Subtraction
-  * With signed int dominance - `SELECT (-120)::int4 - 10::uint8;` will result in `-130`
-  * With unsigned int dominance - `SELECT 10::uint8 - (-120)::int4;` will result in `130`
-  * With unsigned int dominance - `SELECT 10::uint8 - (120)::int4;` will result in in error `uint8 out of range`, because unsigned integer cannot represent negative values
+  * Signed int dominant - `SELECT (-120)::int4 - 10::uint8;` → `-130`
+  * Unsigned int dominant - `SELECT 10::uint8 - (-120)::int4;` → `130`
+  * Unsigned int dominant - `SELECT 10::uint8 - (120)::int4;` → `uint8 out of range`, because unsigned integer cannot represent negative values
 * Multiplication
-  * With signed int dominance - `SELECT (-120)::int4 * 10::uint8;` with result in `-1200`
-  * With unsigned int dominance - `SELECT 10::uint8 * (-120)::int4;` will result in error `unsigned int multiply by negative signed int is probhibited`, because unsigned integer cannot represent negative values
-  * With unsigned int dominance - `SELECT 120::uint8 * 10::int4;` will result in `1200`
+  * Signed int dominant - `SELECT (-120)::int4 * 10::uint8;` → `-1200`
+  * Unsigned int dominant - `SELECT 10::uint8 * (-120)::int4;` → `unsigned int multiply by negative signed int is probhibited`, because unsigned integer cannot represent negative values
+  * Unsigned int dominant - `SELECT 120::uint8 * 10::int4;` → `1200`
 * Division
-  * With signed int dominance - `SELECT (-120)::int4 / 10::uint8;` will result in `0` (because negative int is always less than uint)
-  * With unsigned int dominance - `SELECT 10::uint8 / (-120)::int4;` will result in error `unsigned int division/modulo by negative signed int is probhibited`, because unsigned integer cannot represent negative values
-  * With unsigned int dominance - `SELECT 120::uint8 / 10::int4;` will result in `12`
+  * Signed int dominant - `SELECT (-120)::int4 / 10::uint8;` → `0` (because negative int is always less than uint)
+  * Unsigned int dominant - `SELECT 10::uint8 / (-120)::int4;` → `unsigned int division/modulo by negative signed int is probhibited`, because unsigned integer cannot represent negative values
+  * Unsigned int dominant - `SELECT 120::uint8 / 10::int4;` → `12`
 * Modulo
-  * With signed int dominance - `SELECT (-3)::int4 % 2::uint8;` will result in `-3` (because negative int is always less than int)
-  * With unsigned int dominance - `SELECT 3::uint8 % (-2)::int4;` will result in error `unsigned int division/modulo by negative signed int is probhibited`, because unsigned integer cannot represent negative values
-  * With unsigned int dominance - `SELECT 3::uint8 % 2::int4;` will result in `1`
-
-### Bitwise arithmetic
-Bitwise arithmetic between signed and unsigned integer types is allowed for all kind of operations without any restrictions, so use it with caution.
+  * Signed int dominant - `SELECT (-3)::int4 % 2::uint8;` → `-3` (because negative int is always less than int)
+  * Unsigned int dominant - `SELECT 3::uint8 % (-2)::int4;` → `unsigned int division/modulo by negative signed int is probhibited`, because unsigned integer cannot represent negative values
+  * Unsigned int dominant - `SELECT 3::uint8 % 2::int4;` → `1`
 
 
 ## Build

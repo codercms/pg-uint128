@@ -1,10 +1,8 @@
 #include "postgres.h"
 #include "fmgr.h"
-#include "utils/memutils.h"
 #include <access/hash.h>
 #include "lib/stringinfo.h"
 #include <libpq/pqformat.h>
-#include <stdint.h>
 #include "uint_utils.h"
 #include "int_utils.h"
 #include "int128.h"
@@ -68,7 +66,7 @@ Datum int16_out(PG_FUNCTION_ARGS)
 
     buf = (char *) palloc(41);
 
-    bufPtr = int128_to_string_v2(*num, buf, 41);
+    bufPtr = int128_to_string(*num, buf, 41);
     if (bufPtr == NULL) {
         pfree(buf);
 
@@ -144,19 +142,3 @@ Datum int16_hash(PG_FUNCTION_ARGS)
         )
     );
 }
-
-
-// Cast ops
-
-DEFINE_INT16_FROM_INT_FUNC(int2, int16, PG_GETARG_INT16);
-DEFINE_INT16_FROM_INT_FUNC(int4, int32, PG_GETARG_INT32);
-DEFINE_INT16_FROM_INT_FUNC(int8, int64, PG_GETARG_INT64);
-DEFINE_INT16_FROM_INT_FUNC(uint8, uint64, PG_GETARG_UINT64);
-DEFINE_INT16_FROM_INT_FUNC(uint16, uint128, PG_GETARG_UINT128);
-
-DEFINE_INT16_TO_INT_FUNC(int2, int16, INT16_MIN, INT16_MAX, PG_RETURN_INT16);
-DEFINE_INT16_TO_INT_FUNC(int4, int32, INT32_MIN, INT32_MAX, PG_RETURN_INT32);
-DEFINE_INT16_TO_INT_FUNC(int8, int64, INT64_MIN, INT64_MAX, PG_RETURN_INT64);
-DEFINE_INT16_TO_INT_FUNC(uint8, uint64, 0, UINT64_MAX, PG_RETURN_UINT64);
-DEFINE_INT16_TO_INT_FUNC(uint16, uint128, 0, UINT128_MAX, PG_RETURN_UINT128);
-

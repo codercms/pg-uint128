@@ -1,9 +1,9 @@
-#ifndef UINT64_H
-#define UINT64_H
+#ifndef UINT32_H
+#define UINT32_H
 
 #include "postgres.h"
 
-static int uint64_internal_cmp(const uint64 arg1, const uint64 arg2)
+static int uint32_internal_cmp(const uint32 arg1, const uint32 arg2)
 {
     if (arg1 < arg2) return -1; // arg1 is less than arg2
     if (arg1 > arg2) return 1; // arg1 is greater than arg2

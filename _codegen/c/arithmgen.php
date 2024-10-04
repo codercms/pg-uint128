@@ -194,7 +194,12 @@ function genSignedIntWithUIntArithmFunc(Type $left, Type $right, Op $op): string
          * In integer modulo, any division where the absolute value of the numerator is less than the denominator results in original value of numerator.
          */
 
-        $fn .= "    if (a < 0 || b > {$left->getMaxConstC()}) {\n";
+        $addCmp = '';
+        if ($right->bitSize >= $left->bitSize) {
+            $addCmp .= " || b > {$left->getMaxConstC()}";
+        }
+
+        $fn .= "    if (a < 0{$addCmp}) {\n";
         $fn .= "        $left->pgReturnMacro(" . ($op === Op::Div ? '0' : 'a') . ");\n";
         $fn .= "    }\n";
 

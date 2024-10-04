@@ -28,7 +28,7 @@ int parse_int128(const char *str, int128 *result);
 
 // Function to convert int128 to a decimal string using Golang approach
 // inspired by formatBits in strconv/itoa.go
-char *int128_to_string_v2(int128 value, char *buffer, size_t buffer_size);
+char *int128_to_string(int128 value, char *buffer, size_t buffer_size);
 
 /*------------------------------------------------------------------------
  * Overflow routines for signed integers

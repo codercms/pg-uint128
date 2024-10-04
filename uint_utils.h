@@ -73,14 +73,14 @@ static inline uint128* AllocUint128(uint128 initial)
 );
 
 int parse_uint128(const char *str, uint128 *result);
-
 int parse_uint64(const char *str, uint64 *result);
+int parse_uint32(const char *str, uint32 *result);
+int parse_uint16(const char *str, uint16 *result);
 
 char *uint128_to_string(uint128 value, char *buffer, size_t buffer_size);
-
-char *uint128_to_string_v2(uint128 value, char *buffer, size_t buffer_size);
-
-char *uint64_to_string_v2(uint64 value, char *buffer, size_t buffer_size);
+char *uint64_to_string(uint64 value, char *buffer, size_t buffer_size);
+char *uint32_to_string(uint32 value, char *buffer, size_t buffer_size);
+char *uint16_to_string(uint16 value, char *buffer, size_t buffer_size);
 
 // Swaps bytes in 64 bit int
 // Linux byteswap.h impl

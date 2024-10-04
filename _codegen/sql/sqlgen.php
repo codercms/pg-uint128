@@ -728,6 +728,60 @@ $types = [
         ],
         casts: INT_CAST_TYPES,
     ),
+    new TypeConfig(
+        type: UINT32,
+        alignment: 'int4',
+        passByValue: true,
+        ops: [
+            new TypeOpConfig(Op::Eq, types: INT_CAST_TYPES, inverseTypes: true),
+            new TypeOpConfig(Op::Ne, types: INT_CAST_TYPES, inverseTypes: true),
+            new TypeOpConfig(Op::Gt, types: INT_CAST_TYPES, inverseTypes: true),
+            new TypeOpConfig(Op::Lt, types: INT_CAST_TYPES, inverseTypes: true),
+            new TypeOpConfig(Op::Ge, types: INT_CAST_TYPES, inverseTypes: true),
+            new TypeOpConfig(Op::Le, types: INT_CAST_TYPES, inverseTypes: true),
+
+            new TypeOpConfig(Op::Add, types: INT_CAST_TYPES, inverseTypes: true),
+            new TypeOpConfig(Op::Sub, types: INT_CAST_TYPES, inverseTypes: true),
+            new TypeOpConfig(Op::Mul, types: INT_CAST_TYPES, inverseTypes: true),
+            new TypeOpConfig(Op::Div, types: INT_CAST_TYPES, inverseTypes: true),
+            new TypeOpConfig(Op::Mod, types: INT_CAST_TYPES, inverseTypes: true),
+
+            new TypeOpConfig(Op::Xor),
+            new TypeOpConfig(Op::And),
+            new TypeOpConfig(Op::Or),
+            new TypeOpConfig(Op::Not),
+            new TypeOpConfig(Op::Shl),
+            new TypeOpConfig(Op::Shr),
+        ],
+        casts: INT_CAST_TYPES,
+    ),
+    new TypeConfig(
+        type: UINT16,
+        alignment: 'int2',
+        passByValue: true,
+        ops: [
+            new TypeOpConfig(Op::Eq, types: INT_CAST_TYPES, inverseTypes: true),
+            new TypeOpConfig(Op::Ne, types: INT_CAST_TYPES, inverseTypes: true),
+            new TypeOpConfig(Op::Gt, types: INT_CAST_TYPES, inverseTypes: true),
+            new TypeOpConfig(Op::Lt, types: INT_CAST_TYPES, inverseTypes: true),
+            new TypeOpConfig(Op::Ge, types: INT_CAST_TYPES, inverseTypes: true),
+            new TypeOpConfig(Op::Le, types: INT_CAST_TYPES, inverseTypes: true),
+
+            new TypeOpConfig(Op::Add, types: INT_CAST_TYPES, inverseTypes: true),
+            new TypeOpConfig(Op::Sub, types: INT_CAST_TYPES, inverseTypes: true),
+            new TypeOpConfig(Op::Mul, types: INT_CAST_TYPES, inverseTypes: true),
+            new TypeOpConfig(Op::Div, types: INT_CAST_TYPES, inverseTypes: true),
+            new TypeOpConfig(Op::Mod, types: INT_CAST_TYPES, inverseTypes: true),
+
+            new TypeOpConfig(Op::Xor),
+            new TypeOpConfig(Op::And),
+            new TypeOpConfig(Op::Or),
+            new TypeOpConfig(Op::Not),
+            new TypeOpConfig(Op::Shl),
+            new TypeOpConfig(Op::Shr),
+        ],
+        casts: INT_CAST_TYPES,
+    ),
 
     new TypeConfig(
         type: INT128,
@@ -774,9 +828,16 @@ $buf .= "\n\n-- Cross types ops\n";
 
 
 const CROSS_TYPES = [
-    'uint8' => [UINT128, INT128],
-    'uint16' => [UINT64, INT128],
-    'int16' => [UINT64, UINT128],
+    // UINT16
+    'uint2' => [UINT32, UINT64, UINT128, INT128],
+    // UINT32
+    'uint4' => [UINT16, UINT64, UINT128, INT128],
+    // UINT64
+    'uint8' =>  [UINT16, UINT32, UINT128, INT128],
+    // UINT128
+    'uint16' => [UINT16, UINT32, UINT64, INT128],
+    // INT128
+    'int16' =>  [UINT16, UINT32, UINT64, UINT128],
 ];
 
 /** @var array<string, string[]> $processedCastPairs */

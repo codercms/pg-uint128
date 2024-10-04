@@ -191,7 +191,7 @@ Datum int8_div_uint2(PG_FUNCTION_ARGS)
     if (b == 0) {
         DIVISION_BY_ZERO_ERR;
     }
-    if (a < 0 || b > INT64_MAX) {
+    if (a < 0) {
         PG_RETURN_INT64(0);
     }
     PG_RETURN_INT64(a / (int64)b);
@@ -206,7 +206,7 @@ Datum int8_mod_uint2(PG_FUNCTION_ARGS)
     if (b == 0) {
         DIVISION_BY_ZERO_ERR;
     }
-    if (a < 0 || b > INT64_MAX) {
+    if (a < 0) {
         PG_RETURN_INT64(a);
     }
     PG_RETURN_INT64(a % (int64)b);
@@ -260,7 +260,7 @@ Datum int8_div_uint4(PG_FUNCTION_ARGS)
     if (b == 0) {
         DIVISION_BY_ZERO_ERR;
     }
-    if (a < 0 || b > INT64_MAX) {
+    if (a < 0) {
         PG_RETURN_INT64(0);
     }
     PG_RETURN_INT64(a / (int64)b);
@@ -275,7 +275,7 @@ Datum int8_mod_uint4(PG_FUNCTION_ARGS)
     if (b == 0) {
         DIVISION_BY_ZERO_ERR;
     }
-    if (a < 0 || b > INT64_MAX) {
+    if (a < 0) {
         PG_RETURN_INT64(a);
     }
     PG_RETURN_INT64(a % (int64)b);
