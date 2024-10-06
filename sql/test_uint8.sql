@@ -202,3 +202,29 @@ SELECT max(s::uint8) FROM generate_series(1, 10000) s;
 
 SELECT s FROM generate_series(1::uint8, 10::uint8) s;
 SELECT s FROM generate_series(1::uint8, 10::uint8, 2::uint8) s;
+
+-- Ranges block
+
+SELECT uint8range(0, 10);
+SELECT uint8range(0::uint8, 18446744073709551615::uint8);
+SELECT uint8range(0::uint8, 18446744073709551615::uint8, '[]');
+SELECT upper(uint8range(0, 10));
+SELECT lower(uint8range(0, 10));
+SELECT isempty(uint8range(0, 10));
+SELECT uint8range(0, 10) @> 9::uint8;
+SELECT uint8range(0, 10) @> 10::uint8;
+SELECT uint8range(0, 10) && uint8range(10,20);
+SELECT uint8range(0, 10) && uint8range(9,20);
+SELECT uint8range(5, 10) - uint8range(5, 10);
+SELECT uint8range(5, 10) - uint8range(5, 9);
+CREATE TEMPORARY TABLE test_uint8range (
+    r uint8range,
+
+    EXCLUDE USING GIST (r WITH &&)
+);
+
+INSERT INTO test_uint8range (r) VALUES (uint8range(0, 10));
+INSERT INTO test_uint8range (r) VALUES (uint8range(10, 20));
+INSERT INTO test_uint8range (r) VALUES (uint8range(19, 30));
+
+DROP TABLE test_uint8range;

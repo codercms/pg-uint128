@@ -1635,6 +1635,27 @@ RETURNS SETOF uint16
 AS '$libdir/uint128', 'generate_series_step_uint16'
 LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT SUPPORT generate_series_uint16_support;
 
+-- Ranges block
+
+CREATE TYPE uint16range;
+
+CREATE OR REPLACE FUNCTION uint16_range_canonical(uint16range)
+RETURNS uint16range
+AS '$libdir/uint128', 'uint16_range_canonical'
+LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
+
+CREATE OR REPLACE FUNCTION uint16_range_subdiff(uint16, uint16)
+RETURNS double precision
+AS '$libdir/uint128', 'uint16_range_subdiff'
+LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
+
+CREATE TYPE uint16range AS RANGE (
+    SUBTYPE = uint16,
+    SUBTYPE_OPCLASS = uint16_ops,
+    CANONICAL = uint16_range_canonical,
+    SUBTYPE_DIFF = uint16_range_subdiff
+);
+
 
 -- Type uint8 block
 
@@ -3250,6 +3271,27 @@ CREATE FUNCTION generate_series(uint8, uint8, uint8)
 RETURNS SETOF uint8
 AS '$libdir/uint128', 'generate_series_step_uint8'
 LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT SUPPORT generate_series_uint8_support;
+
+-- Ranges block
+
+CREATE TYPE uint8range;
+
+CREATE OR REPLACE FUNCTION uint8_range_canonical(uint8range)
+RETURNS uint8range
+AS '$libdir/uint128', 'uint8_range_canonical'
+LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
+
+CREATE OR REPLACE FUNCTION uint8_range_subdiff(uint8, uint8)
+RETURNS double precision
+AS '$libdir/uint128', 'uint8_range_subdiff'
+LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
+
+CREATE TYPE uint8range AS RANGE (
+    SUBTYPE = uint8,
+    SUBTYPE_OPCLASS = uint8_ops,
+    CANONICAL = uint8_range_canonical,
+    SUBTYPE_DIFF = uint8_range_subdiff
+);
 
 
 -- Type uint4 block
@@ -4867,6 +4909,27 @@ RETURNS SETOF uint4
 AS '$libdir/uint128', 'generate_series_step_uint4'
 LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT SUPPORT generate_series_uint4_support;
 
+-- Ranges block
+
+CREATE TYPE uint4range;
+
+CREATE OR REPLACE FUNCTION uint4_range_canonical(uint4range)
+RETURNS uint4range
+AS '$libdir/uint128', 'uint4_range_canonical'
+LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
+
+CREATE OR REPLACE FUNCTION uint4_range_subdiff(uint4, uint4)
+RETURNS double precision
+AS '$libdir/uint128', 'uint4_range_subdiff'
+LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
+
+CREATE TYPE uint4range AS RANGE (
+    SUBTYPE = uint4,
+    SUBTYPE_OPCLASS = uint4_ops,
+    CANONICAL = uint4_range_canonical,
+    SUBTYPE_DIFF = uint4_range_subdiff
+);
+
 
 -- Type uint2 block
 
@@ -6483,6 +6546,27 @@ RETURNS SETOF uint2
 AS '$libdir/uint128', 'generate_series_step_uint2'
 LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT SUPPORT generate_series_uint2_support;
 
+-- Ranges block
+
+CREATE TYPE uint2range;
+
+CREATE OR REPLACE FUNCTION uint2_range_canonical(uint2range)
+RETURNS uint2range
+AS '$libdir/uint128', 'uint2_range_canonical'
+LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
+
+CREATE OR REPLACE FUNCTION uint2_range_subdiff(uint2, uint2)
+RETURNS double precision
+AS '$libdir/uint128', 'uint2_range_subdiff'
+LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
+
+CREATE TYPE uint2range AS RANGE (
+    SUBTYPE = uint2,
+    SUBTYPE_OPCLASS = uint2_ops,
+    CANONICAL = uint2_range_canonical,
+    SUBTYPE_DIFF = uint2_range_subdiff
+);
+
 
 -- Type int16 block
 
@@ -8098,6 +8182,27 @@ CREATE FUNCTION generate_series(int16, int16, int16)
 RETURNS SETOF int16
 AS '$libdir/uint128', 'generate_series_step_int16'
 LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT SUPPORT generate_series_int16_support;
+
+-- Ranges block
+
+CREATE TYPE int16range;
+
+CREATE OR REPLACE FUNCTION int16_range_canonical(int16range)
+RETURNS int16range
+AS '$libdir/uint128', 'int16_range_canonical'
+LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
+
+CREATE OR REPLACE FUNCTION int16_range_subdiff(int16, int16)
+RETURNS double precision
+AS '$libdir/uint128', 'int16_range_subdiff'
+LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
+
+CREATE TYPE int16range AS RANGE (
+    SUBTYPE = int16,
+    SUBTYPE_OPCLASS = int16_ops,
+    CANONICAL = int16_range_canonical,
+    SUBTYPE_DIFF = int16_range_subdiff
+);
 
 
 

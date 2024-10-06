@@ -999,3 +999,82 @@ SELECT s FROM generate_series(1::uint16, 10::uint16, 2::uint16) s;
  9
 (5 rows)
 
+-- Ranges block
+SELECT uint16range(0, 10);
+ uint16range 
+-------------
+ [0,10)
+(1 row)
+
+SELECT uint16range(0::uint16, 340282366920938463463374607431768211455::uint16);
+                 uint16range                 
+---------------------------------------------
+ [0,340282366920938463463374607431768211455)
+(1 row)
+
+SELECT uint16range(0::uint16, 340282366920938463463374607431768211455::uint16, '[]');
+ERROR:  uint16 out of range
+SELECT upper(uint16range(0, 10));
+ upper 
+-------
+ 10
+(1 row)
+
+SELECT lower(uint16range(0, 10));
+ lower 
+-------
+ 0
+(1 row)
+
+SELECT isempty(uint16range(0, 10));
+ isempty 
+---------
+ f
+(1 row)
+
+SELECT uint16range(0, 10) @> 9::uint16;
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT uint16range(0, 10) @> 10::uint16;
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT uint16range(0, 10) && uint16range(10,20);
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT uint16range(0, 10) && uint16range(9,20);
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT uint16range(5, 10) - uint16range(5, 10);
+ ?column? 
+----------
+ empty
+(1 row)
+
+SELECT uint16range(5, 10) - uint16range(5, 9);
+ ?column? 
+----------
+ [9,10)
+(1 row)
+
+CREATE TEMPORARY TABLE test_uint16range (
+    r uint16range,
+    EXCLUDE USING GIST (r WITH &&)
+);
+INSERT INTO test_uint16range (r) VALUES (uint16range(0, 10));
+INSERT INTO test_uint16range (r) VALUES (uint16range(10, 20));
+INSERT INTO test_uint16range (r) VALUES (uint16range(19, 30));
+ERROR:  conflicting key value violates exclusion constraint "test_uint16range_r_excl"
+DETAIL:  Key (r)=([19,30)) conflicts with existing key (r)=([10,20)).
+DROP TABLE test_uint16range;

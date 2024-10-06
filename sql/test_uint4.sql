@@ -202,3 +202,29 @@ SELECT max(s::uint4) FROM generate_series(1, 10000) s;
 
 SELECT s FROM generate_series(1::uint4, 10::uint4) s;
 SELECT s FROM generate_series(1::uint4, 10::uint4, 2::uint4) s;
+
+-- Ranges block
+
+SELECT uint4range(0, 10);
+SELECT uint4range(0::uint4, 4294967295::uint4);
+SELECT uint4range(0::uint4, 4294967295::uint4, '[]');
+SELECT upper(uint4range(0, 10));
+SELECT lower(uint4range(0, 10));
+SELECT isempty(uint4range(0, 10));
+SELECT uint4range(0, 10) @> 9::uint4;
+SELECT uint4range(0, 10) @> 10::uint4;
+SELECT uint4range(0, 10) && uint4range(10,20);
+SELECT uint4range(0, 10) && uint4range(9,20);
+SELECT uint4range(5, 10) - uint4range(5, 10);
+SELECT uint4range(5, 10) - uint4range(5, 9);
+CREATE TEMPORARY TABLE test_uint4range (
+    r uint4range,
+
+    EXCLUDE USING GIST (r WITH &&)
+);
+
+INSERT INTO test_uint4range (r) VALUES (uint4range(0, 10));
+INSERT INTO test_uint4range (r) VALUES (uint4range(10, 20));
+INSERT INTO test_uint4range (r) VALUES (uint4range(19, 30));
+
+DROP TABLE test_uint4range;

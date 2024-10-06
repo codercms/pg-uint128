@@ -21,3 +21,13 @@ function getTypeOpFuncName(Type $left, Type $right, Op $op): string
 {
     return "{$left->pgName}_{$op->value}_{$right->pgName}";
 }
+
+function getRangeSubDiffFuncName(Type $type): string
+{
+    return "{$type->pgName}_range_subdiff";
+}
+
+function getRangeCanonicalFuncName(Type $type): string
+{
+    return "{$type->pgName}_range_canonical";
+}

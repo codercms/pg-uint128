@@ -14,7 +14,8 @@ OBJS = magic.o uint128.o uint64.o uint32.o uint16.o int128.o uint_utils.o int_ut
 	casts/uint16.o casts/uint32.o casts/uint64.o casts/uint128.o \
 	casts/int16.o casts/int32.o casts/int64.o casts/int128.o \
 	agg/uint16.o agg/uint32.o agg/uint64.o agg/uint128.o agg/int128.o \
-	series/uint16.o series/uint32.o series/uint64.o series/uint128.o series/int128.o
+	series/uint16.o series/uint32.o series/uint64.o series/uint128.o series/int128.o \
+	ranges/uint16.o ranges/uint32.o ranges/uint64.o ranges/uint128.o ranges/int128.o
 
 PG_CONFIG = pg_config
 PGXS := $(shell $(PG_CONFIG) --pgxs)

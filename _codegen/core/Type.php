@@ -48,6 +48,11 @@ class Type
         // Escape min value because of PostgreSQL operator orders
         return "($this->minValue)";
     }
+
+    public function getRangePgTypeName(): string
+    {
+        return "{$this->pgName}range";
+    }
 }
 
 

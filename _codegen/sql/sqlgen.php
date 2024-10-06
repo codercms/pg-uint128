@@ -240,6 +240,164 @@ function genSQLTestGenerateSeries(Type $type): array
     return [$sql, $expected];
 }
 
+function genSQLRanges(Type $type): string
+{
+    global $extName;
+
+    $rangeTypName = $type->getRangePgTypeName();
+
+    $canonicalFuncName = getRangeCanonicalFuncName($type);
+    $subDiffFuncName = getRangeSubDiffFuncName($type);
+
+    return <<<SQL
+CREATE TYPE $rangeTypName;
+
+CREATE OR REPLACE FUNCTION $canonicalFuncName($rangeTypName)
+RETURNS $rangeTypName
+AS '\$libdir/$extName', '$canonicalFuncName'
+LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
+
+CREATE OR REPLACE FUNCTION $subDiffFuncName($type->pgName, $type->pgName)
+RETURNS double precision
+AS '\$libdir/$extName', '$subDiffFuncName'
+LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
+
+CREATE TYPE $rangeTypName AS RANGE (
+    SUBTYPE = $type->pgName,
+    SUBTYPE_OPCLASS = {$type->pgName}_ops,
+    CANONICAL = $canonicalFuncName,
+    SUBTYPE_DIFF = $subDiffFuncName
+);
+SQL;
+}
+
+/**
+ * @return array{0: string, 1: string}
+ */
+function genSQLTestRanges(Type $type): array
+{
+    $sql = "";
+    $expected = "";
+
+    $rangeTypName = $type->getRangePgTypeName();
+
+    // Test constructor
+    $q = "SELECT $rangeTypName(0, 10);\n";
+
+    $sql .= $q;
+    $expected .= $q;
+    $expected .= genSqlExpectedPaddedValue($rangeTypName, "[0,10)", false);
+
+    // Test constructor (max possible range)
+    $q = "SELECT $rangeTypName({$type->getPgSqlMinVal()}::$type->pgName, $type->maxValue::$type->pgName);\n";
+
+    $sql .= $q;
+    $expected .= $q;
+    $expected .= genSqlExpectedPaddedValue($rangeTypName, "[$type->minValue,$type->maxValue)", false);
+
+    // Test constructor (max possible range overflow)
+    $q = "SELECT $rangeTypName({$type->getPgSqlMinVal()}::$type->pgName, $type->maxValue::$type->pgName, '[]');\n";
+
+    $sql .= $q;
+    $expected .= $q;
+    $expected .= "ERROR:  $type->pgName out of range\n";
+
+    // Test upper
+    $q = "SELECT upper($rangeTypName(0, 10));\n";
+
+    $sql .= $q;
+    $expected .= $q;
+    $expected .= genSqlExpectedPaddedValue("upper", "10", false);
+
+    // Test lower
+    $q = "SELECT lower($rangeTypName(0, 10));\n";
+
+    $sql .= $q;
+    $expected .= $q;
+    $expected .= genSqlExpectedPaddedValue("lower", "0", false);
+
+    // Test isempty
+    $q = "SELECT isempty($rangeTypName(0, 10));\n";
+
+    $sql .= $q;
+    $expected .= $q;
+    $expected .= genSqlExpectedPaddedValue("isempty", "f", false);
+
+    // Test containment
+    $q = "SELECT $rangeTypName(0, 10) @> 9::$type->pgName;\n";
+
+    $sql .= $q;
+    $expected .= $q;
+    $expected .= genSqlExpectedPaddedValue("?column?", "t", false);
+
+    $q = "SELECT $rangeTypName(0, 10) @> 10::$type->pgName;\n";
+
+    $sql .= $q;
+    $expected .= $q;
+    $expected .= genSqlExpectedPaddedValue("?column?", "f", false);
+
+    // Test overlapping
+    $q = "SELECT $rangeTypName(0, 10) && $rangeTypName(10,20);\n";
+
+    $sql .= $q;
+    $expected .= $q;
+    $expected .= genSqlExpectedPaddedValue("?column?", "f", false);
+
+    $q = "SELECT $rangeTypName(0, 10) && $rangeTypName(9,20);\n";
+
+    $sql .= $q;
+    $expected .= $q;
+    $expected .= genSqlExpectedPaddedValue("?column?", "t", false);
+
+    // Test subtract
+    $q = "SELECT $rangeTypName(5, 10) - $rangeTypName(5, 10);\n";
+
+    $sql .= $q;
+    $expected .= $q;
+    $expected .= genSqlExpectedPaddedValue("?column?", "empty", false);
+
+    $q = "SELECT $rangeTypName(5, 10) - $rangeTypName(5, 9);\n";
+
+    $sql .= $q;
+    $expected .= $q;
+    $expected .= genSqlExpectedPaddedValue("?column?", "[9,10)", false);
+
+    // Test GIST constraints
+    $tmpTbl = "test_$rangeTypName";
+
+    $q = <<<SQL
+CREATE TEMPORARY TABLE $tmpTbl (
+    r $rangeTypName,
+
+    EXCLUDE USING GIST (r WITH &&)
+);
+
+INSERT INTO $tmpTbl (r) VALUES ($rangeTypName(0, 10));
+INSERT INTO $tmpTbl (r) VALUES ($rangeTypName(10, 20));
+INSERT INTO $tmpTbl (r) VALUES ($rangeTypName(19, 30));
+
+DROP TABLE $tmpTbl;
+
+SQL;
+
+    $sql .= $q;
+    $expected .= <<<EOL
+CREATE TEMPORARY TABLE $tmpTbl (
+    r $rangeTypName,
+    EXCLUDE USING GIST (r WITH &&)
+);
+INSERT INTO $tmpTbl (r) VALUES ($rangeTypName(0, 10));
+INSERT INTO $tmpTbl (r) VALUES ($rangeTypName(10, 20));
+INSERT INTO $tmpTbl (r) VALUES ($rangeTypName(19, 30));
+ERROR:  conflicting key value violates exclusion constraint "{$tmpTbl}_r_excl"
+DETAIL:  Key (r)=([19,30)) conflicts with existing key (r)=([10,20)).
+DROP TABLE $tmpTbl;
+
+EOL;
+
+    return [$sql, $expected];
+}
+
 class TypeOpConfig
 {
     /**
@@ -736,6 +894,12 @@ EOT;
             $sql .= genSQLGenerateSeries($this->type);
 
             $sql .= "\n";
+
+            $sql .= "\n-- Ranges block\n\n";
+
+            $sql .= genSQLRanges($this->type);
+
+            $sql .= "\n";
         }
 
         $sql .= "\n";
@@ -775,6 +939,15 @@ EOT;
         $expected .= "-- Generate series block\n";
 
         [$tSql, $tExpected] = genSQLTestGenerateSeries($this->type);
+        $sql .= $tSql;
+        $expected .= $tExpected;
+
+        $sql .= "\n";
+
+        $sql .= "-- Ranges block\n\n";
+        $expected .= "-- Ranges block\n";
+
+        [$tSql, $tExpected] = genSQLTestRanges($this->type);
         $sql .= $tSql;
         $expected .= $tExpected;
 

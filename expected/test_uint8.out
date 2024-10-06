@@ -999,3 +999,82 @@ SELECT s FROM generate_series(1::uint8, 10::uint8, 2::uint8) s;
  9
 (5 rows)
 
+-- Ranges block
+SELECT uint8range(0, 10);
+ uint8range 
+------------
+ [0,10)
+(1 row)
+
+SELECT uint8range(0::uint8, 18446744073709551615::uint8);
+        uint8range        
+--------------------------
+ [0,18446744073709551615)
+(1 row)
+
+SELECT uint8range(0::uint8, 18446744073709551615::uint8, '[]');
+ERROR:  uint8 out of range
+SELECT upper(uint8range(0, 10));
+ upper 
+-------
+ 10
+(1 row)
+
+SELECT lower(uint8range(0, 10));
+ lower 
+-------
+ 0
+(1 row)
+
+SELECT isempty(uint8range(0, 10));
+ isempty 
+---------
+ f
+(1 row)
+
+SELECT uint8range(0, 10) @> 9::uint8;
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT uint8range(0, 10) @> 10::uint8;
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT uint8range(0, 10) && uint8range(10,20);
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT uint8range(0, 10) && uint8range(9,20);
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT uint8range(5, 10) - uint8range(5, 10);
+ ?column? 
+----------
+ empty
+(1 row)
+
+SELECT uint8range(5, 10) - uint8range(5, 9);
+ ?column? 
+----------
+ [9,10)
+(1 row)
+
+CREATE TEMPORARY TABLE test_uint8range (
+    r uint8range,
+    EXCLUDE USING GIST (r WITH &&)
+);
+INSERT INTO test_uint8range (r) VALUES (uint8range(0, 10));
+INSERT INTO test_uint8range (r) VALUES (uint8range(10, 20));
+INSERT INTO test_uint8range (r) VALUES (uint8range(19, 30));
+ERROR:  conflicting key value violates exclusion constraint "test_uint8range_r_excl"
+DETAIL:  Key (r)=([19,30)) conflicts with existing key (r)=([10,20)).
+DROP TABLE test_uint8range;

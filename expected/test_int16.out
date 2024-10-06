@@ -909,3 +909,82 @@ SELECT s FROM generate_series(1::int16, 10::int16, 2::int16) s;
  9
 (5 rows)
 
+-- Ranges block
+SELECT int16range(0, 10);
+ int16range 
+------------
+ [0,10)
+(1 row)
+
+SELECT int16range((-170141183460469231731687303715884105728)::int16, 170141183460469231731687303715884105727::int16);
+                                     int16range                                     
+------------------------------------------------------------------------------------
+ [-170141183460469231731687303715884105728,170141183460469231731687303715884105727)
+(1 row)
+
+SELECT int16range((-170141183460469231731687303715884105728)::int16, 170141183460469231731687303715884105727::int16, '[]');
+ERROR:  int16 out of range
+SELECT upper(int16range(0, 10));
+ upper 
+-------
+ 10
+(1 row)
+
+SELECT lower(int16range(0, 10));
+ lower 
+-------
+ 0
+(1 row)
+
+SELECT isempty(int16range(0, 10));
+ isempty 
+---------
+ f
+(1 row)
+
+SELECT int16range(0, 10) @> 9::int16;
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT int16range(0, 10) @> 10::int16;
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT int16range(0, 10) && int16range(10,20);
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT int16range(0, 10) && int16range(9,20);
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT int16range(5, 10) - int16range(5, 10);
+ ?column? 
+----------
+ empty
+(1 row)
+
+SELECT int16range(5, 10) - int16range(5, 9);
+ ?column? 
+----------
+ [9,10)
+(1 row)
+
+CREATE TEMPORARY TABLE test_int16range (
+    r int16range,
+    EXCLUDE USING GIST (r WITH &&)
+);
+INSERT INTO test_int16range (r) VALUES (int16range(0, 10));
+INSERT INTO test_int16range (r) VALUES (int16range(10, 20));
+INSERT INTO test_int16range (r) VALUES (int16range(19, 30));
+ERROR:  conflicting key value violates exclusion constraint "test_int16range_r_excl"
+DETAIL:  Key (r)=([19,30)) conflicts with existing key (r)=([10,20)).
+DROP TABLE test_int16range;
