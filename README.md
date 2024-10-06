@@ -38,10 +38,8 @@ A PostgreSQL extension that adds native support for unsigned integers and 128-bi
   * MIN
   * MAX
   *
-  * **Note on SUM/AVG Aggregation**: These aggregations are performed using PostgreSQL's numeric type to minimize the risk of overflow. 
-
-    While this approach ensures precision, it may not be the most efficient in terms of performance, as it relies on PostgreSQL's numeric type calculations rather than CPU-native operations.
-
+  * **Note on SUM/AVG Aggregation**: These aggregations are performed using PostgreSQL's numeric type to minimize the risk of overflow.  
+    While this approach ensures precision, it may not be the most efficient in terms of performance, as it relies on PostgreSQL's numeric type calculations rather than CPU-native operations.  
     The maximum precision of the aggregates is limited by PostgreSQL's numeric type precision.
 * `generate_series` support for each type (`SELECT * FROM generate_series(1::uint4, 10::uint4);`)
 
