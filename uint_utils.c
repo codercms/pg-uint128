@@ -8,6 +8,7 @@
 \
         for (size_t i = 0; i < len; i++) { \
             if (str[i] < '0' || str[i] > '9') { \
+                /* Invalid character */ \
                 return -1; \
             } \
 \
@@ -32,7 +33,6 @@ DEFINE_PARSE_UINT_FUNC(uint16, 16);
 DEFINE_PARSE_UINT_FUNC(uint32, 32);
 DEFINE_PARSE_UINT_FUNC(uint64, 64);
 DEFINE_PARSE_UINT_FUNC(uint128, 128);
-
 
 static const char *smallsString =
         "00" "01" "02" "03" "04" "05" "06" "07" "08" "09"
@@ -90,7 +90,7 @@ static const char *smallsString =
         return ptr; /* Return the pointer to the start of the string */ \
     }
 
-DEFINE_UINT_TO_STRING_FUNC(uint128, 41);
-DEFINE_UINT_TO_STRING_FUNC(uint64, 21);
-DEFINE_UINT_TO_STRING_FUNC(uint32, 11);
-DEFINE_UINT_TO_STRING_FUNC(uint16, 6);
+DEFINE_UINT_TO_STRING_FUNC(uint128, UINT128_STRBUFLEN);
+DEFINE_UINT_TO_STRING_FUNC(uint64, UINT64_STRBUFLEN);
+DEFINE_UINT_TO_STRING_FUNC(uint32, UINT32_STRBUFLEN);
+DEFINE_UINT_TO_STRING_FUNC(uint16, UINT16_STRBUFLEN);

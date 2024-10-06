@@ -191,3 +191,14 @@ SELECT 120::int8 % 10::uint16;
 SELECT 1::int8 % 0::uint16;
 SELECT (-120)::int8 % 10::uint16;
 
+-- Agg ops block
+
+SELECT sum(s::uint16) FROM generate_series(1, 10000) s;
+SELECT avg(s::uint16) FROM generate_series(1, 10000) s;
+SELECT min(s::uint16) FROM generate_series(1, 10000) s;
+SELECT max(s::uint16) FROM generate_series(1, 10000) s;
+
+-- Generate series block
+
+SELECT s FROM generate_series(1::uint16, 10::uint16) s;
+SELECT s FROM generate_series(1::uint16, 10::uint16, 2::uint16) s;

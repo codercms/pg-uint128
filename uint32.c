@@ -49,21 +49,12 @@ Datum uint4_in(PG_FUNCTION_ARGS)
 
 Datum uint4_out(PG_FUNCTION_ARGS)
 {
+    char buf[UINT32_STRBUFLEN];
     uint32 num = PG_GETARG_UINT32(0);
-    char *buf;
-    char *bufPtr;
-    char *str;
 
-    buf = (char *) palloc(11);
+    char *bufPtr = uint32_to_string(num, buf, sizeof(buf));
 
-    bufPtr = uint32_to_string(num, buf, 11);
-
-    str = (char *) palloc(strlen(bufPtr));
-    strcpy(str, bufPtr);
-
-    pfree(buf);
-
-    PG_RETURN_CSTRING(str);
+    PG_RETURN_CSTRING(pstrdup(bufPtr));
 }
 
 /*

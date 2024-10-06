@@ -15,7 +15,9 @@ function genSQLCmpFunc(Op $op, Type $leftType, Type $rightType): string
     return <<<EOL
 CREATE FUNCTION $funcName($leftType->pgName, $rightType->pgName) RETURNS boolean
     IMMUTABLE
+    PARALLEL SAFE
     STRICT
+    LEAKPROOF
     LANGUAGE C
     AS '\$libdir/$extName', '$funcName';
 EOL;
@@ -30,6 +32,7 @@ function genSQLArithmeticFunc(Op $op, Type $leftType, Type $rightType): string
     return <<<EOL
 CREATE FUNCTION $funcName($leftType->pgName, $rightType->pgName) RETURNS {$leftType->pgName}
     IMMUTABLE
+    PARALLEL SAFE
     STRICT
     LANGUAGE C
     AS '\$libdir/$extName', '$funcName';
@@ -67,10 +70,7 @@ function genSQLTestForCmpOp(Op $op, Type $leftType, Type $rightType): array
         $sql .= $q;
 
         $expected .= $q;
-        $expected .= " ?column? \n";
-        $expected .= "----------\n";
-        $expected .= " $op[2]\n";
-        $expected .= "(1 row)\n\n";
+        $expected .= genSqlExpectedPaddedValue("?column?", $op[2], false);
     }
 
     return [$sql, $expected];
@@ -123,15 +123,7 @@ function genSQLTestForArithmOp(Op $op, Type $leftType, Type $rightType): array
     };
 
     $expected = $sql;
-    $expected .= " ?column? \n";
-    $expected .= "----------\n";
-
-    // psql has different formatting for signed and unsigned integers
-    $expected .= ($leftType->isUnsigned || $leftType === INT128)
-        ? " $expectedVal\n"
-        : str_pad($expectedVal, strlen("----------") - 1, pad_type: STR_PAD_LEFT) . "\n";
-
-    $expected .= "(1 row)\n\n";
+    $expected .= genSqlExpectedPaddedValue("?column?", $expectedVal, !$leftType->isUnsigned && $leftType !== INT128);
 
     if ($leftType !== $rightType) {
         // Ops that could potentially overflow has to be checked for overflow
@@ -165,17 +157,85 @@ function genSQLTestForArithmOp(Op $op, Type $leftType, Type $rightType): array
             $sql .= $q;
 
             $expected .= $q;
-            $expected .= " ?column? \n";
-            $expected .= "----------\n";
-
-            // psql has different formatting for signed and unsigned integers
-            $expected .= ($leftType->isUnsigned || $leftType === INT128)
-                ? " $expectedVal\n"
-                : str_pad($expectedVal, strlen("----------") - 1, pad_type: STR_PAD_LEFT) . "\n";
-
-            $expected .= "(1 row)\n\n";
+            $expected .= genSqlExpectedPaddedValue("?column?", $expectedVal, !$leftType->isUnsigned && $leftType !== INT128);
         }
     }
+
+    return [$sql, $expected];
+}
+
+function genSQLGenerateSeries(Type $type): string
+{
+    global $extName;
+
+    $funcName = getGenSeriesFuncName($type);
+    $stepFuncName = getGenSeriesStepFuncName($type);
+    $supportFuncName = getGenSeriesSupportFuncName($type);
+
+    return <<<SQL
+CREATE FUNCTION $supportFuncName(internal)
+RETURNS internal
+AS '\$libdir/$extName', '$supportFuncName'
+LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
+
+CREATE FUNCTION generate_series($type->pgName, $type->pgName)
+RETURNS SETOF $type->pgName
+AS '\$libdir/$extName', '$funcName'
+LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT SUPPORT $supportFuncName;
+
+CREATE FUNCTION generate_series($type->pgName, $type->pgName, $type->pgName)
+RETURNS SETOF $type->pgName
+AS '\$libdir/$extName', '$stepFuncName'
+LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT SUPPORT $supportFuncName;
+SQL;
+}
+
+/**
+ * @return array{0: string, 1: string}
+ */
+function genSQLTestGenerateSeries(Type $type): array
+{
+    $sql = "";
+    $expected = "";
+
+    $q = "SELECT s FROM generate_series(1::$type->pgName, 10::$type->pgName) s;\n";
+
+    $sql .= $q;
+    $expected .= $q;
+    $expected .= genSqlExpectedPaddedValues(
+        "s",
+        array_map(fn(int $n) => (string)$n, range(1, 10)),
+        false,
+    );
+
+    // Test stepped
+
+    $q = "SELECT s FROM generate_series(1::$type->pgName, 10::$type->pgName, 2::$type->pgName) s;\n";
+
+    $sql .= $q;
+    $expected .= $q;
+    $expected .= genSqlExpectedPaddedValues(
+        "s",
+        array_map(fn(int $n) => (string)$n, range(1, 10, 2)),
+        false,
+    );
+
+    // Test overflow (actually I don't know how to produce overflow because of strict typing in UINT it seems impossible)
+
+//    $rangeEnd = match ($type) {
+//        UINT16 => '65545',
+//        UINT32 => '4294967305',
+//        UINT64 => '18446744073709551625',
+//        UINT128 => '340282366920938463463374607431768211465',
+//        INT128 => '170141183460469231731687303715884105737',
+//        default => throw new InvalidArgumentException("Unknown type {$type->pgName}"),
+//    };
+//
+//    $q = "SELECT s FROM generate_series($type->maxValue::$type->pgName, $rangeEnd::$type->pgName) s;\n";
+//
+//    $sql .= $q;
+//    $expected .= $q;
+//    $expected .= genSqlExpectedPaddedValue("s", $type->maxValue, false);
 
     return [$sql, $expected];
 }
@@ -244,6 +304,7 @@ class TypeOpConfig
                 $sql .= <<<EOT
 CREATE FUNCTION $funcName({$parent->type->pgName}, int4) RETURNS {$parent->type->pgName}
     IMMUTABLE
+    PARALLEL SAFE
     STRICT
     LANGUAGE C
     AS '\$libdir/$extName', '$funcName';
@@ -265,6 +326,7 @@ EOT;
                 $sql .= <<<EOT
 CREATE FUNCTION $funcName({$parent->type->pgName}, {$parent->type->pgName}) RETURNS {$parent->type->pgName}
     IMMUTABLE
+    PARALLEL SAFE
     STRICT
     LANGUAGE C
     AS '\$libdir/$extName', '$funcName';
@@ -284,6 +346,7 @@ EOT;
             return <<<EOT
 CREATE FUNCTION $funcName({$parent->type->pgName}) RETURNS {$parent->type->pgName}
     IMMUTABLE
+    PARALLEL SAFE
     STRICT
     LANGUAGE C
     AS '\$libdir/$extName', '$funcName';
@@ -504,6 +567,7 @@ class TypeConfig
     /**
      * @param array<TypeOpConfig> $ops
      * @param array<Type> $casts
+     * @param array<AggOp> $aggOps
      */
     public function __construct(
         public readonly Type $type,
@@ -512,6 +576,7 @@ class TypeConfig
         public readonly array $ops = [],
         public readonly array $casts = [],
         public readonly bool $crossTypesOnly = false,
+        public readonly array $aggOps = [],
     ) {
         $this->name = $type->pgName;
     }
@@ -521,30 +586,36 @@ class TypeConfig
         $sql = '';
 
         if (!$this->crossTypesOnly) {
+            $sql .= "-- Type {$this->type->pgName} block\n\n";
+
             $passByValue = $this->passByValue ? 'PASSEDBYVALUE,' : '--PASSEDBYVALUE,';
             $byteSize = $this->type->bitSize / 8;
 
             $sql .= <<<EOL
 CREATE FUNCTION {$this->name}_in(cstring) RETURNS {$this->name}
     IMMUTABLE
+    PARALLEL SAFE
     STRICT
     LANGUAGE C
     AS '\$libdir/$extName', '{$this->name}_in';
 
 CREATE FUNCTION {$this->name}_out($this->name) RETURNS cstring
     IMMUTABLE
+    PARALLEL SAFE
     STRICT
     LANGUAGE C
     AS '\$libdir/$extName', '{$this->name}_out';
 
 CREATE FUNCTION {$this->name}_recv(internal) RETURNS {$this->name}
     IMMUTABLE
+    PARALLEL SAFE
     STRICT
     LANGUAGE C
     AS '\$libdir/$extName', '{$this->name}_recv';
 
 CREATE FUNCTION {$this->name}_send($this->name) RETURNS bytea
     IMMUTABLE
+    PARALLEL SAFE
     STRICT
     LANGUAGE C
     AS '\$libdir/$extName', '{$this->name}_send';
@@ -644,6 +715,29 @@ DEFAULT FOR TYPE $this->name USING hash FAMILY integer_ops AS
 EOT;
         }
 
+        if (!$this->crossTypesOnly) {
+            $sql .= "\n-- Agg ops block\n\n";
+
+            $avgAggFuncGenerated = false;
+
+            foreach ($this->aggOps as $aggOp) {
+                if ($aggOp === AggOp::Sum || $aggOp === AggOp::Avg) {
+                    $sql .= $aggOp->getSql($extName, $this->type, !$avgAggFuncGenerated);
+                    $avgAggFuncGenerated = true;
+                } else {
+                    $sql .= $aggOp->getSql($extName, $this->type, true);
+                }
+
+                $sql .= "\n";
+            }
+
+            $sql .= "\n-- Generate series block\n\n";
+
+            $sql .= genSQLGenerateSeries($this->type);
+
+            $sql .= "\n";
+        }
+
         $sql .= "\n";
 
         return $sql;
@@ -666,11 +760,31 @@ EOT;
             $expected .= $tExpected;
         }
 
+        $sql .= "-- Agg ops block\n\n";
+        $expected .= "-- Agg ops block\n";
+
+        foreach ($this->aggOps as $op) {
+            [$tSql, $tExpected] = $op->getSqlTest($this->type);
+            $sql .= $tSql;
+            $expected .= $tExpected;
+        }
+
+        $sql .= "\n";
+
+        $sql .= "-- Generate series block\n\n";
+        $expected .= "-- Generate series block\n";
+
+        [$tSql, $tExpected] = genSQLTestGenerateSeries($this->type);
+        $sql .= $tSql;
+        $expected .= $tExpected;
+
         return [$sql, $expected];
     }
 }
 
 const INT_CAST_TYPES = [INT16, INT32, INT64];
+
+const AGG_OPS = [AggOp::Sum, AggOp::Avg, AggOp::Min, AggOp::Max];
 
 /** @var array<TypeConfig> $types */
 $types = [
@@ -700,6 +814,7 @@ $types = [
             new TypeOpConfig(Op::Shr),
         ],
         casts: array_merge(INT_CAST_TYPES, [UUID]),
+        aggOps: AGG_OPS,
     ),
     new TypeConfig(
         type: UINT64,
@@ -727,6 +842,7 @@ $types = [
             new TypeOpConfig(Op::Shr),
         ],
         casts: INT_CAST_TYPES,
+        aggOps: AGG_OPS,
     ),
     new TypeConfig(
         type: UINT32,
@@ -754,6 +870,7 @@ $types = [
             new TypeOpConfig(Op::Shr),
         ],
         casts: INT_CAST_TYPES,
+        aggOps: AGG_OPS,
     ),
     new TypeConfig(
         type: UINT16,
@@ -781,6 +898,7 @@ $types = [
             new TypeOpConfig(Op::Shr),
         ],
         casts: INT_CAST_TYPES,
+        aggOps: AGG_OPS,
     ),
 
     new TypeConfig(
@@ -809,6 +927,7 @@ $types = [
             new TypeOpConfig(Op::Shr),
         ],
         casts: array_merge(INT_CAST_TYPES),
+        aggOps: AGG_OPS,
     ),
 ];
 

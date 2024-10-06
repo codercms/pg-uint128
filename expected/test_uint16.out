@@ -948,3 +948,54 @@ SELECT (-120)::int8 % 10::uint16;
      -120
 (1 row)
 
+-- Agg ops block
+SELECT sum(s::uint16) FROM generate_series(1, 10000) s;
+   sum    
+----------
+ 50005000
+(1 row)
+
+SELECT avg(s::uint16) FROM generate_series(1, 10000) s;
+          avg          
+-----------------------
+ 5000.5000000000000000
+(1 row)
+
+SELECT min(s::uint16) FROM generate_series(1, 10000) s;
+ min 
+-----
+ 1
+(1 row)
+
+SELECT max(s::uint16) FROM generate_series(1, 10000) s;
+  max  
+-------
+ 10000
+(1 row)
+
+-- Generate series block
+SELECT s FROM generate_series(1::uint16, 10::uint16) s;
+ s  
+----
+ 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+ 10
+(10 rows)
+
+SELECT s FROM generate_series(1::uint16, 10::uint16, 2::uint16) s;
+ s 
+---
+ 1
+ 3
+ 5
+ 7
+ 9
+(5 rows)
+

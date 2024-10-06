@@ -23,9 +23,12 @@ static inline uint128* AllocUint128(uint128 initial)
 #define UINT128_MAX ((2 * (unsigned __int128) INT128_MAX) + 1)
 
 #define Uint128PGetDatum(X)		    PointerGetDatum(X)
+#define UInt128GetDatum(X)          Uint128PGetDatum(AllocInt128(X))
 #define PG_RETURN_UINT128_P(X)		return Uint128PGetDatum(X)
 #define PG_RETURN_UINT128(X)		return Uint128PGetDatum(AllocUint128(X))
+
 #define DatumGetUint128P(X)		    ((uint128 *) DatumGetPointer(X))
+#define DatumGetUInt128(X)		    (*(uint128 *) DatumGetPointer(X))
 #define PG_GETARG_UINT128_P(X)		DatumGetUint128P(PG_GETARG_DATUM(X))
 #define PG_GETARG_UINT128(X)		*DatumGetUint128P(PG_GETARG_DATUM(X))
 
@@ -71,6 +74,18 @@ static inline uint128* AllocUint128(uint128 initial)
         errmsg(#pgtype " out of range" #suffix) \
     ) \
 );
+
+typedef enum {
+    UINT16_STRLEN = 5,
+    UINT32_STRLEN = 10,
+    UINT64_STRLEN = 20,
+    UINT128_STRLEN = 39,
+
+    UINT16_STRBUFLEN = UINT16_STRLEN + 1,
+    UINT32_STRBUFLEN = UINT32_STRLEN + 1,
+    UINT64_STRBUFLEN = UINT64_STRLEN + 1,
+    UINT128_STRBUFLEN = UINT128_STRLEN + 1,
+} uint128_strlen_t;
 
 int parse_uint128(const char *str, uint128 *result);
 int parse_uint64(const char *str, uint64 *result);
@@ -391,5 +406,7 @@ static inline bool mul_u128_overflow(uint128 a, uint128 b, uint128 *result)
     return false; // No overflow
 #endif
 }
+
+/* Generate series function */
 
 #endif

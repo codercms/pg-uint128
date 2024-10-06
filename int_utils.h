@@ -17,11 +17,22 @@ static inline int128* AllocInt128(int128 initial)
 }
 
 #define Int128PGetDatum(X)		    PointerGetDatum(X)
+#define Int128GetDatum(X)           Int128PGetDatum(AllocInt128(X))
 #define PG_RETURN_INT128_P(X)		return Int128PGetDatum(X)
 #define PG_RETURN_INT128(X)		    return Int128PGetDatum(AllocInt128(X))
 #define DatumGetInt128P(X)		    ((int128 *) DatumGetPointer(X))
+#define DatumGetInt128(X)		    (*(int128 *) DatumGetPointer(X))
 #define PG_GETARG_INT128_P(X)		DatumGetInt128P(PG_GETARG_DATUM(X))
 #define PG_GETARG_INT128(X)		    *DatumGetInt128P(PG_GETARG_DATUM(X))
+
+typedef enum {
+	INT128_STRLEN = 40,
+	INT128_STRBUFLEN = INT128_STRLEN + 1
+} int128_strlen_t;
+
+// extern const size_t INT128_STRLEN = 40;
+
+// extern const size_t INT128_STRBUFLEN = INT128_STRLEN + 1;
 
 // Function to parse int128 from string
 int parse_int128(const char *str, int128 *result);

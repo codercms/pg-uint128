@@ -69,7 +69,7 @@ char *int128_to_string(int128 value, char *buffer, size_t buffer_size)
     char *ptr;
     bool is_negative = false;
 
-    if (buffer_size < 41) {
+    if (buffer_size < INT128_STRBUFLEN) {
         return NULL; // Not enough space
     }
 

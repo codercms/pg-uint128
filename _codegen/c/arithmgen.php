@@ -9,20 +9,11 @@ function getArithmFuncName(Type $left, Type $right, Op $op): string
     return "{$left->pgName}_{$op->value}_{$right->pgName}";
 }
 
-function getOverflowFuncName(Type $left, Type $right, Op $op): string
+function getOverflowFuncName(Type $left, Op $op): string
 {
     $prefix = $left->isUnsigned ? 'u' : 's';
 
-    $name = "{$op->value}_{$prefix}{$left->bitSize}";
-
-//    if ($left->isUnsigned !== $right->isUnsigned) {
-//        $prefix = $right->isUnsigned ? 'u' : 's';
-//        $name .= "_{$prefix}{$right->bitSize}";
-//    }
-
-    $name .= "_overflow";
-
-    return $name;
+    return "{$op->value}_{$prefix}{$left->bitSize}_overflow";
 }
 
 function getArithmOpCastedBasedOnBitSize(Type $left, Type $right, Op $op): string
@@ -73,7 +64,7 @@ function genSameSignArithmFunc(Type $left, Type $right, Op $op): string
             $fn .= "    }\n";
         }
 
-        $overflowFn = getOverflowFuncName($left, $right, $op);
+        $overflowFn = getOverflowFuncName($left, $op);
         $fn .= "    if ($overflowFn(a, b, &result)) {\n";
         $fn .= "        OUT_OF_RANGE_ERR($left->pgName);\n";
         $fn .= "    }\n";
@@ -147,7 +138,7 @@ function genUIntWithSignedIntArithmFunc(Type $left, Type $right, Op $op): string
 
         // Handle negative signed integers
         if ($negOp) {
-            $negOverflowFn = getOverflowFuncName($left, $right, $negOp);
+            $negOverflowFn = getOverflowFuncName($left, $negOp);
 
             $fn .= "    if (b < 0) {\n";
             $fn .= "        if ($negOverflowFn(a, -b, &result)) {\n";
@@ -156,7 +147,7 @@ function genUIntWithSignedIntArithmFunc(Type $left, Type $right, Op $op): string
             $fn .= "    }\n";
         }
 
-        $overflowFn = getOverflowFuncName($left, $right, $op);
+        $overflowFn = getOverflowFuncName($left, $op);
         $fn .= "    if ($overflowFn(a, b, &result)) {\n";
         $fn .= "        OUT_OF_RANGE_ERR($left->pgName);\n";
         $fn .= "    }\n";
@@ -221,7 +212,7 @@ function genSignedIntWithUIntArithmFunc(Type $left, Type $right, Op $op): string
             $fn .= "    }\n";
         }
 
-        $overflowFn = getOverflowFuncName($left, $right, $op);
+        $overflowFn = getOverflowFuncName($left, $op);
         $fn .= "    if ($overflowFn(a, b, &result)) {\n";
         $fn .= "        OUT_OF_RANGE_ERR($left->pgName);\n";
         $fn .= "    }\n";

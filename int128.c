@@ -54,35 +54,13 @@ Datum int16_in(PG_FUNCTION_ARGS)
 
 Datum int16_out(PG_FUNCTION_ARGS)
 {
-    int128 *num = PG_GETARG_INT128_P(0);
-    char *buf;
-    char *bufPtr;
-    char *str;
+    char buf[INT128_STRBUFLEN];
 
-    if (num == NULL)
-        elog(ERROR, "NULL pointer");
+    int128 num = PG_GETARG_INT128(0);
 
-    // elog(INFO, "uint16out high %llu low %llu", (uint64)((*num) >> 64), (uint64)(*num));
+    char *bufPtr = int128_to_string(num, buf, sizeof(buf));
 
-    buf = (char *) palloc(41);
-
-    bufPtr = int128_to_string(*num, buf, 41);
-    if (bufPtr == NULL) {
-        pfree(buf);
-
-        elog(ERROR, "Cannot convert uint16 to string");
-    }
-
-    // elog(INFO, "uint16out buf (%p) bufPtr (%p): %s", buf, bufPtr, bufPtr);
-
-    str = (char *) palloc(strlen(bufPtr));
-    strcpy(str, bufPtr);
-
-    pfree(buf);
-
-    // elog(INFO, "uint16out str: %s", str);
-
-    PG_RETURN_CSTRING(str);
+    PG_RETURN_CSTRING(pstrdup(bufPtr));
 }
 
 /*
