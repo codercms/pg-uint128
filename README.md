@@ -9,7 +9,7 @@ A PostgreSQL extension that adds native support for unsigned integers and 128-bi
   * `uint16` (uint128)
 * Provides signed 128-bit integer type:
   * `int16` (int128)
-* Provides corresponding range (and multi range) types with GIST indexing support:
+* Provides corresponding range (and multi range) types with GiST indexing support:
   * `uint2range`, `uint2multirange`
   * `uint4range`, `uint4multirange`
   * `uint8range`, `uint8multirange`
