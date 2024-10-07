@@ -17,6 +17,10 @@ OBJS = magic.o uint128.o uint64.o uint32.o uint16.o int128.o uint_utils.o int_ut
 	series/uint16.o series/uint32.o series/uint64.o series/uint128.o series/int128.o \
 	ranges/uint16.o ranges/uint32.o ranges/uint64.o ranges/uint128.o ranges/int128.o
 
+# -Werror treat warnings as errors
+# -march=native generate instructions for the machine type cpu-type
+#PG_CFLAGS=-Werror -march=native
+
 PG_CONFIG = pg_config
 PGXS := $(shell $(PG_CONFIG) --pgxs)
 include $(PGXS)
