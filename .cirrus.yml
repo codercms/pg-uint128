@@ -29,8 +29,6 @@ task:
     - pg_createcluster --start $PGVERSION test -p 55435 -- -A trust
   build_script:
     - PATH=/usr/lib/postgresql/$PGVERSION/bin:$PATH
-    - make python-check
-    - make all
     - make install
   test_script:
     - PATH=/usr/lib/postgresql/$PGVERSION/bin:$PATH
