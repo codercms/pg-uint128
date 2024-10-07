@@ -1,6 +1,9 @@
 # pg-uint128
 A PostgreSQL extension that adds native support for unsigned integers and 128-bit signed/unsigned integer types.
 
+## Supported PostgreSQL Versions
+PostgreSQL 12 - 17
+
 ## Features
 * Provides multiple unsigned types:
   * `uint2` (uint16)
