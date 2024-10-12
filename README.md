@@ -100,6 +100,30 @@ This extension addresses potential overflow and underflow during arithmetic oper
   * Unsigned int dominant - `SELECT 3::uint8 % (-2)::int4;` → `unsigned int division/modulo by negative signed int is probhibited`, because unsigned integer cannot represent negative values
   * Unsigned int dominant - `SELECT 3::uint8 % 2::int4;` → `1`
 
+## Docker
+You can easily try out the `pg-uint128` extension using a pre-built Docker image with PostgreSQL and the extension preinstalled.
+
+The Docker image is based on the official PostgreSQL image, so you can use all the options and configurations supported by the official image.
+
+Follow these steps to get started:
+
+1. Run the PostgreSQL container with `pg-uint128`:
+    ```sh
+    docker run --name pg-uint128 -d -p 15432:5432 -e POSTGRES_PASSWORD=secret codercms/postgres-uint128:15-1.0.0
+    ```
+
+2. Connect to PostgreSQL:
+   - Option 1: Use psql from your local machine:
+     ```sh
+     psql -h 127.0.0.1 -p 15432 -U postgres
+     ```
+
+   - Option 2: Use psql from inside the Docker container
+     ```sh
+     docker exec -it pg-uint128 psql -U postgres
+     ```
+
+Now you can explore and experiment with the `pg-uint128` extension within a PostgreSQL environment.
 
 ## Build
 ### Linux

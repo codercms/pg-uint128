@@ -1,0 +1,12 @@
+.github
+.vscode
+.idea
+_codegen
+results
+.cirrus.yml
+README.md
+*.bc
+*.o
+*.so
+*.dll
+Dockerfile
