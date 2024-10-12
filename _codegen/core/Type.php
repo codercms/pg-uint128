@@ -21,6 +21,9 @@ class Type
 
         public readonly string $fromDatum,
         public readonly string $toDatum,
+
+        public readonly string $pgGetArgPtrMacro = '',
+        public readonly string $pgReturnPtrMacro = '',
     ) {
     }
 
@@ -107,6 +110,9 @@ const UINT128 = new Type(
     strLen: 39,
     fromDatum: 'DatumGetUInt128',
     toDatum: 'UInt128GetDatum',
+
+    pgGetArgPtrMacro: 'PG_GETARG_UINT128_P',
+    pgReturnPtrMacro: 'PG_RETURN_UINT128_P'
 );
 
 const UINT_TYPES = [
@@ -167,6 +173,9 @@ const INT128 = new Type(
     strLen: 40,
     fromDatum: 'DatumGetInt128',
     toDatum: 'Int128GetDatum',
+
+    pgGetArgPtrMacro: 'PG_GETARG_INT128_P',
+    pgReturnPtrMacro: 'PG_RETURN_INT128_P'
 );
 
 

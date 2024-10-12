@@ -33,23 +33,19 @@ Datum uint16_avg_accum_inv(PG_FUNCTION_ARGS) {
 
 PG_FUNCTION_INFO_V1(uint16_smaller);
 Datum uint16_smaller(PG_FUNCTION_ARGS) {
-    uint128		arg1 = PG_GETARG_UINT128(0);
-    uint128		arg2 = PG_GETARG_UINT128(1);
-    uint128		result;
+    uint128*		arg1 = PG_GETARG_UINT128_P(0);
+    uint128*		arg2 = PG_GETARG_UINT128_P(1);
 
-    result = ((arg1 < arg2) ? arg1 : arg2);
-    PG_RETURN_UINT128(result);
+    PG_RETURN_UINT128_P(*arg1 < *arg2 ? arg1 : arg2);
 }
 
 
 PG_FUNCTION_INFO_V1(uint16_larger);
 Datum uint16_larger(PG_FUNCTION_ARGS) {
-    uint128		arg1 = PG_GETARG_UINT128(0);
-    uint128		arg2 = PG_GETARG_UINT128(1);
-    uint128		result;
+    uint128*		arg1 = PG_GETARG_UINT128_P(0);
+    uint128*		arg2 = PG_GETARG_UINT128_P(1);
 
-    result = ((arg1 > arg2) ? arg1 : arg2);
-    PG_RETURN_UINT128(result);
+    PG_RETURN_UINT128_P(*arg1 > *arg2 ? arg1 : arg2);
 }
 
 

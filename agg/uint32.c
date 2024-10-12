@@ -35,10 +35,8 @@ PG_FUNCTION_INFO_V1(uint4_smaller);
 Datum uint4_smaller(PG_FUNCTION_ARGS) {
     uint32		arg1 = PG_GETARG_UINT32(0);
     uint32		arg2 = PG_GETARG_UINT32(1);
-    uint32		result;
 
-    result = ((arg1 < arg2) ? arg1 : arg2);
-    PG_RETURN_UINT32(result);
+    PG_RETURN_UINT32(arg1 < arg2 ? arg1 : arg2);
 }
 
 
@@ -46,10 +44,8 @@ PG_FUNCTION_INFO_V1(uint4_larger);
 Datum uint4_larger(PG_FUNCTION_ARGS) {
     uint32		arg1 = PG_GETARG_UINT32(0);
     uint32		arg2 = PG_GETARG_UINT32(1);
-    uint32		result;
 
-    result = ((arg1 > arg2) ? arg1 : arg2);
-    PG_RETURN_UINT32(result);
+    PG_RETURN_UINT32(arg1 > arg2 ? arg1 : arg2);
 }
 
 

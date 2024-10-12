@@ -50,23 +50,34 @@ function genMinMaxAggFunc(Type $left, AggOp $op): string
 
     $funcName = "{$left->pgName}{$op->getFuncNameSuffix()}";
 
-    $fn = "PG_FUNCTION_INFO_V1($funcName);\n";
-    $fn .= "Datum $funcName(PG_FUNCTION_ARGS) {\n";
-    $fn .= "    {$left->name}		arg1 = $left->pgGetArgMacro(0);\n";
-    $fn .= "    {$left->name}		arg2 = $left->pgGetArgMacro(1);\n";
-    $fn .= "    {$left->name}		result;\n";
-    $fn .= "\n";
+    $getArgMacro = $left->pgGetArgMacro;
+    $returnMacro = $left->pgReturnMacro;
+    $leftType = $left->name;
+    $deref = '';
 
-    if ($op === AggOp::Min) {
-        $fn .= "    result = ((arg1 < arg2) ? arg1 : arg2);\n";
-    } else {
-        $fn .= "    result = ((arg1 > arg2) ? arg1 : arg2);\n";
+    // Optimize operations by directly returning pointer to arg avoiding memory allocation
+    if ($left->bitSize >= 128 && $left->pgGetArgPtrMacro && $left->pgReturnPtrMacro) {
+        $leftType = "{$leftType}*";
+        $deref = "*";
+        $getArgMacro = $left->pgGetArgPtrMacro;
+        $returnMacro = $left->pgReturnPtrMacro;
     }
 
-    $fn .= "    $left->pgReturnMacro(result);\n";
-    $fn .= "}\n";
+    $sign = match($op) {
+        AggOp::Min => "<",
+        AggOp::Max => ">",
+    };
 
-    return $fn;
+    return <<<C
+PG_FUNCTION_INFO_V1($funcName);
+Datum $funcName(PG_FUNCTION_ARGS) {
+    {$leftType}		arg1 = $getArgMacro(0);
+    {$leftType}		arg2 = $getArgMacro(1);
+
+    $returnMacro({$deref}arg1 $sign {$deref}arg2 ? arg1 : arg2);
+}
+
+C;
 }
 
 $header = <<<C
