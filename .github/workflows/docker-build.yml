@@ -39,8 +39,8 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            ${{ IMAGE_NAME }}:${{ matrix.pg_version }}-${{ github.event.release.tag_name }}
-            ${{ IMAGE_NAME }}:${{ matrix.pg_version }}-latest
+            ${{ env.IMAGE_NAME }}:${{ matrix.pg_version }}-${{ github.event.release.tag_name }}
+            ${{ env.IMAGE_NAME }}:${{ matrix.pg_version }}-latest
           build-args: |
             PGVERSION=${{ matrix.pg_version }}
 
