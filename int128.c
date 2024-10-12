@@ -64,7 +64,7 @@ Datum int16_out(PG_FUNCTION_ARGS)
 }
 
 /*
- *		uint16recv			- converts external binary format to uint16
+ *		int16recv			- converts external binary format to int16
  */
 Datum int16_recv(PG_FUNCTION_ARGS)
 {
@@ -73,19 +73,19 @@ Datum int16_recv(PG_FUNCTION_ARGS)
 
     StringInfo buf = (StringInfo) PG_GETARG_POINTER(0);
 
-    // Read the high 64 bits from the buffer
+    // Read the high 64 bits from the buffer (sign-extended)
     high_part = pq_getmsgint64(buf);
-    // Read the low 64 bits from the buffer
+    // Read the low 64 bits from the buffer (unsigned)
     low_part = pq_getmsgint64(buf);
 
     // Combine the two 64-bit parts into a 128-bit value
-    result = ((int128) high_part << 64) | (int128) low_part;
+    result = ((int128) high_part << 64) | (uint64) low_part;
 
     PG_RETURN_INT128(result);
 }
 
 /*
- *		uint16send			- converts uint16 to binary format
+ *		int16send			- converts int16 to binary format
  */
 Datum int16_send(PG_FUNCTION_ARGS)
 {
