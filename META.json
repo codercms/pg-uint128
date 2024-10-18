@@ -1,0 +1,55 @@
+{
+  "name": "uint128",
+  "abstract": "Unsigned integer datatypes for PostgreSQL",
+  "description": "This extension provides additional integer types for PostgreSQL: uint2, uint4, uint8, uint16, int16",
+  "version": "1.0.0",
+  "maintainer": [
+    "Dmitry K. <coder1994@gmail.com>"
+  ],
+  "license": {
+    "PostgreSQL": "https://www.postgresql.org/about/licence"
+  },
+  "prereqs": {
+    "runtime": {
+      "requires": {
+        "PostgreSQL": "12.0"
+      }
+    }
+  },
+  "provides": {
+    "uint128": {
+      "abstract": "Unsigned integer datatypes for PostgreSQL",
+      "file": "uint128--1.0.0.sql",
+      "docfile": "README.md",
+      "version": "1.0.0"
+    }
+  },
+  "resources": {
+    "bugtracker": {
+      "web": "https://github.com/pg-uint/pg-uint128/issues"
+    },
+    "repository": {
+      "url": "git://github.com/pg-uint/pg-uint128.git",
+      "web": "https://github.com/pg-uint/pg-uint128",
+      "type": "git"
+    }
+  },
+  "generated_by": "Dmitry K.",
+  "meta-spec": {
+    "version": "1.0.0",
+    "url": "https://pgxn.org/meta/spec.txt"
+  },
+  "tags": [
+    "integer",
+    "unsigned",
+    "unsigned integer",
+    "uint",
+    "uint2",
+    "uint4",
+    "uint8",
+    "uint16",
+    "int16",
+    "128 bit",
+    "128 bit integer"
+  ]
+}
