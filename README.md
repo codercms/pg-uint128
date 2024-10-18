@@ -131,7 +131,7 @@ Now you can explore and experiment with the `pg-uint128` extension within a Post
 * Install PostgreSQL version you want, e.g. `sudo apt-get install postgresql-15`
 * Install PostgreSQL dev headers, e.g. `sudo apt-get install postgresql-server-dev-15`
 * Install build tools `sudo apt-get install build-essentials`
-* Clone repository `git clone https://github.com/codercms/pg-uint128.git && cd pg-uint128`
+* Clone repository `git clone https://github.com/pg-uint/pg-uint128.git && cd pg-uint128`
 * Compile extension `make`
 * Copy extension files to pg catalogs `sudo make install`
 
@@ -140,7 +140,7 @@ Now you can explore and experiment with the `pg-uint128` extension within a Post
 * Launch MINGW64 console and execute following commands:
     * `pacman -U https://repo.msys2.org/mingw/mingw64/mingw-w64-x86_64-postgresql-15.3-3-any.pkg.tar.zst` (use your PostgreSQL version here)
     * `pacman --needed -S git mingw-w64-x86_64-gcc base-devel`
-    * `git clone https://github.com/codercms/pg-uint128.git && cd pg-uint128`
+    * `git clone https://github.com/pg-uint/pg-uint128.git && cd pg-uint128`
 
 Then run `make` and copy those files to `POSTGRES_PATH\share\extension` (e.g. `C:\Program Files\PostgreSQL\15\share\extension`):
 * `uint128.control`
