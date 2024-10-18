@@ -3,6 +3,7 @@
   "abstract": "Unsigned integer datatypes for PostgreSQL",
   "description": "This extension provides additional integer types for PostgreSQL: uint2, uint4, uint8, uint16, int16",
   "version": "1.0.0",
+  "release_status": "testing",
   "maintainer": [
     "Dmitry K. <coder1994@gmail.com>"
   ],
